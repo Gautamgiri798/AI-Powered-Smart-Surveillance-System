@@ -1,179 +1,108 @@
-# 🛡️ SafetySnap — AI-Powered Smart Surveillance System
+# 🛡️ SentinelVision — AI-Powered Smart Surveillance System
 
-> Real-time AI surveillance with weapon detection, behavior analysis, and instant alerts.
+> **Advanced real-time AI surveillance providing actionable threat intelligence through computer vision and behavioral analysis.**
+
+SentinelVision is a high-performance, enterprise-ready surveillance dashboard that leverages YOLOv8 deep learning and OpenCV to detect weapons, monitor behavior, and provide instantaneous alerts across various camera inputs.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
+ SentinelVision follows a modular decoupled architecture for maximum stability and speed:
+
+```text
+[Camera Inputs] (USB / RTSP / Virtual)
+        ↓
+[Edge Processing Node]
+  ├── (OpenCV Stream Manager)
+  └── (YOLOv8 Object Detection Engine)
+        ↓ (Real-time Frames + JSON Metadata)
+[Backend Orchestrator (Flask + SocketIO)]
+  ├── (Database Layer: SQLite3)
+  └── (Rules Engine: Behavioral Analysis)
+        ↓ (WebSocket Signals)
+[React Dashboard (Vite)]
+  └── (Glassmorphic UI / Real-time HUD)
 ```
-[Camera/RTSP Streams]
-        ↓
-[Edge Processing (OpenCV + YOLOv8)]
-        ↓ (Frames / Events)
-[Backend Server (Flask + SocketIO)]
-        ↓
- ┌───────────────┬────────────────┬────────────────┐
- │ CV Service    │ Alert Service  │ Storage Layer  │
- │ (YOLO, NLP)  │ (Rules Engine) │ (MongoDB)      │
- └───────────────┴────────────────┴────────────────┘
-        ↓
-[WebSocket API]
-        ↓
-[React Frontend Dashboard]
-```
 
-## ⚡ Tech Stack
+---
 
-| Layer | Technology | Communication |
-|-------|-----------|---------------|
-| Frontend | React + Vite | WebSocket + REST |
-| Backend API | Flask | REST |
-| Real-time | Flask-SocketIO | WebSocket |
-| CV Engine | OpenCV + YOLOv8 | Internal API |
-| Database | SQLite3 | Built-in Python |
-| Deployment | Docker Compose | Internal networking |
+## ⚡ Technical Core
 
-## 🚀 Quick Start
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Frontend** | React 19 + Vite | Premium Dark Mode Dashboard |
+| **Backend** | Flask | Central API Service |
+| **Real-time** | Socket.IO | Ultra-low latency video & alert delivery |
+| **AI Brain** | Ultralytics YOLOv8 | Person & Weapon Detection |
+| **Database** | SQLite3 | Local storage for events & camera configs |
+| **Imaging** | OpenCV | Frame processing & Base64 encoding |
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
+---
 
-### Backend Setup
+## 🚀 Optimized for Performance
+
+The system has been meticulously tuned for standard laptop processors to provide a professional experience without lag:
+
+- **15 FPS Target:** High-fluidity live video streams.
+- **Inference Throttling:** AI runs at 3Hz (detects threats 3 times per second) to keep the CPU cool.
+- **Dynamic Resolution:** Scans at 320px-480px to maximize detection speed.
+- **Async Processing:** Computer vision and frame streaming run on independent background threads.
+
+---
+
+## 🎯 Intelligent Features
+
+### 🔍 Precision Detection
+- **Human Monitoring:** Tracks multiple persons simultaneously.
+- **Weapon Identification:** Instant recognition of Knives and Scissors with a sensitive 25% confidence floor.
+- **Source Selection:** Built-in dropdown to toggle between **PC Integrated Camera** and 📱 **Iriun Webcam** (Index 0, 1, 2).
+
+### 🚨 Behavioral Rules Engine
+- **Loitering:** Detects individuals stationary for more than 60 seconds.
+- **High-Velocity Alert:** Identifies "running" behavior through centroid tracking.
+- **Crowd Detection:** Monitors for unauthorized gatherings (5+ people).
+- **Incident Throttling:** Smart logic prevents the dashboard from being flooded with duplicate alerts.
+
+### 🛡️ Dashboard Experience
+- **Real-time HUD:** Overlaying bounding boxes and scan-lines.
+- **Live Alert Feed:** Categorized by severity (Critical, High, Medium, Low).
+- **Historic Event Log:** Full persistence of detections for forensic review.
+- **Active Stats:** Real-time counters for active cameras, total events, and current session threats.
+
+---
+
+## 🛠️ Ready to Launch
+
+### 1. Requirements
+- Python 3.11 or higher
+- Node.js 18 or higher
+
+### 2. Startup (Backend)
 ```bash
 cd backend
+python -m venv venv
+# Activate venv followed by:
 pip install -r requirements.txt
 python app.py
 ```
-> Server starts at http://localhost:5000
+> Server launches at **http://localhost:5000**
 
-### Frontend Setup
+### 3. Startup (Frontend)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-> Dashboard opens at http://localhost:3000
+> Dashboard launches at **http://localhost:3000**
 
-### Docker (All-in-One)
-```bash
-docker-compose up --build
-```
+---
 
-## 🔑 Default Login
-- **Username:** `admin`
+## 🔐 Credentials
+- **Default Admin:** `admin`
 - **Password:** `admin123`
 
-## 🎯 Features
-
-### Core
-- ✅ Live camera feed streaming (USB/RTSP)
-- ✅ Real-time person & weapon detection (YOLOv8)
-- ✅ Alert generation with severity levels
-- ✅ Real-time dashboard with WebSocket updates
-- ✅ Event logging with MongoDB
-- ✅ JWT Authentication
-
-### Detection Pipeline
-- ✅ YOLOv8 object detection
-- ✅ Centroid-based multi-object tracking
-- ✅ Weapon detection (knife, scissors)
-- ✅ Behavior analysis (loitering, running, crowd)
-- ✅ Alert throttling (prevents spam)
-
-### Dashboard
-- ✅ Live video feeds with scan-line overlay
-- ✅ Real-time alert panel with severity badges
-- ✅ Stats cards (cameras, events, threats)
-- ✅ Event log with filtering & acknowledgment
-- ✅ Camera start/stop controls
-- ✅ Dark theme with glassmorphism design
-
-## 📁 Project Structure
-```
-├── backend/
-│   ├── app.py                  # Flask + SocketIO server
-│   ├── config.py               # Configuration
-│   ├── models/db.py            # SQLite3 database layer
-│   ├── services/
-│   │   ├── detection_service.py  # YOLO detection
-│   │   ├── tracking_service.py   # Object tracking
-│   │   ├── behavior_service.py   # Behavior analysis
-│   │   ├── alert_service.py      # Alert rules engine
-│   │   └── video_service.py      # Video streaming
-│   ├── routes/
-│   │   ├── auth_routes.py
-│   │   ├── camera_routes.py
-│   │   ├── event_routes.py
-│   │   └── stream_routes.py
-│   └── utils/
-│       ├── auth_utils.py
-│       └── frame_utils.py
-├── frontend/
-│   └── src/
-│       ├── App.jsx
-│       ├── components/
-│       │   ├── Dashboard.jsx
-│       │   ├── VideoFeed.jsx
-│       │   ├── AlertPanel.jsx
-│       │   ├── CameraGrid.jsx
-│       │   ├── EventLog.jsx
-│       │   ├── StatsCards.jsx
-│       │   ├── Sidebar.jsx
-│       │   ├── Header.jsx
-│       │   └── Login.jsx
-│       ├── hooks/useSocket.js
-│       └── services/api.js
-├── docker-compose.yml
-└── README.md
-```
-
-## 📡 API Endpoints
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Login |
-| POST | `/api/auth/register` | Register (admin) |
-| GET | `/api/auth/me` | Current user |
-
-### Cameras
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/cameras` | List cameras |
-| POST | `/api/cameras` | Add camera |
-| POST | `/api/cameras/:id/start` | Start streaming |
-| POST | `/api/cameras/:id/stop` | Stop streaming |
-
-### Events
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/events` | List events |
-| GET | `/api/events/stats` | Event statistics |
-| POST | `/api/events/:id/acknowledge` | Acknowledge event |
-
-### WebSocket Events
-| Event | Direction | Data |
-|-------|-----------|------|
-| `video_frame` | Server → Client | `{ camera_id, frame, timestamp }` |
-| `alert` | Server → Client | `{ type, severity, description }` |
-| `detection_update` | Server → Client | `{ camera_id, persons, weapons }` |
-| `start_camera` | Client → Server | `{ camera_id }` |
-| `stop_camera` | Client → Server | `{ camera_id }` |
-
-## 🧠 Detection Classes
-- **Person** (COCO class 0)
-- **Knife** (COCO class 43)
-- **Scissors** (COCO class 76)
-
-## 🚨 Alert Severity Levels
-| Level | Color | Examples |
-|-------|-------|----------|
-| Critical | 🔴 Red | Weapon + Person |
-| High | 🟠 Orange | Weapon detected |
-| Medium | 🟡 Yellow | Running person, Crowd |
-| Low | 🟢 Green | Loitering |
+---
 
 ## 📄 License
-MIT
+MIT License — 2026 SentinelVision Engineering Team.

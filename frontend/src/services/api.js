@@ -4,7 +4,7 @@
 const API_BASE = '/api';
 
 function getAuthHeader() {
-  const token = localStorage.getItem('safetysnap_token');
+  const token = localStorage.getItem('sentinel_token');
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
@@ -22,8 +22,8 @@ async function request(endpoint, options = {}) {
   if (!response.ok) {
     if (response.status === 401) {
       // Token is invalid/expired - force logout
-      localStorage.removeItem('safetysnap_token');
-      localStorage.removeItem('safetysnap_user');
+      localStorage.removeItem('sentinel_token');
+      localStorage.removeItem('sentinel_user');
       window.location.reload();
     }
     throw new Error(data.error || 'Request failed');

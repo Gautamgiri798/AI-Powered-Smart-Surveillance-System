@@ -24,7 +24,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout }) {
           <Shield size={22} />
         </div>
         <div className="sidebar-brand">
-          <h1>SafetySnap</h1>
+          <h1>SentinelVision</h1>
           <p>AI Surveillance</p>
         </div>
       </div>

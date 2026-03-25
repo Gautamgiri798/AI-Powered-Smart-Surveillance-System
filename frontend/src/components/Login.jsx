@@ -14,8 +14,8 @@ export default function Login({ onLogin }) {
 
     try {
       const data = await loginApi(username, password);
-      localStorage.setItem('safetysnap_token', data.token);
-      localStorage.setItem('safetysnap_user', JSON.stringify(data.user));
+      localStorage.setItem('sentinel_token', data.token);
+      localStorage.setItem('sentinel_user', JSON.stringify(data.user));
       onLogin(data.user);
     } catch (err) {
       setError(err.message || 'Login failed');
@@ -30,7 +30,7 @@ export default function Login({ onLogin }) {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">🛡️</div>
-          <h1>SafetySnap</h1>
+          <h1>SentinelVision</h1>
           <p>AI-Powered Smart Surveillance System</p>
         </div>
 

@@ -1,5 +1,5 @@
 """
-SQLite3 database layer for SafetySnap.
+SQLite3 database layer for SentinelVision.
 Provides helper functions for users, cameras, and events tables.
 """
 import sqlite3
