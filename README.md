@@ -1,94 +1,97 @@
-# 🛡️ SentinelVision — AI-Powered Smart Surveillance System
+# 🛡️ SentinelVision — Advanced Omni-Detection Surveillance
 
-> **Advanced real-time AI surveillance providing actionable threat intelligence through computer vision and behavioral analysis.**
+> **The ultimate real-time AI surveillance dashboard. Driven by professional-grade computer vision, high-definition streaming, and omni-directional threat intelligence.**
 
-SentinelVision is a high-performance, enterprise-ready surveillance dashboard that leverages YOLOv8 deep learning and OpenCV to detect weapons, monitor behavior, and provide instantaneous alerts across various camera inputs.
+SentinelVision has evolved into an elite, full-spectrum monitoring system. It leverages the latest **YOLOv8 Medium** neural networks to identify **all 80 standard COCO object categories** across multiple high-definition camera feeds with precision and speed.
 
 ---
 
 ## 🏗️ System Architecture
 
- SentinelVision follows a modular decoupled architecture for maximum stability and speed:
+SentinelVision utilizes a decoupled, high-throughput architecture designed for zero-latency monitoring:
 
 ```text
-[Camera Inputs] (USB / RTSP / Virtual)
+[High-Def Inputs] (Laptop Webcam / Iriun USB / RTSP)
         ↓
-[Edge Processing Node]
-  ├── (OpenCV Stream Manager)
-  └── (YOLOv8 Object Detection Engine)
-        ↓ (Real-time Frames + JSON Metadata)
+[Advanced Processing Node]
+  ├── (CLAHE Video Enhancement)
+  ├── (High-Fidelity 720p Pipeline)
+  └── (YOLOv8-Medium Inference Engine)
+        ↓ (Real-time Frames + Dynamic Metadata)
 [Backend Orchestrator (Flask + SocketIO)]
-  ├── (Database Layer: SQLite3)
-  └── (Rules Engine: Behavioral Analysis)
-        ↓ (WebSocket Signals)
-[React Dashboard (Vite)]
-  └── (Glassmorphic UI / Real-time HUD)
+  ├── (Storage: SQLite3 Persistent Logs)
+  └── (Intelligence: Behavioral Rules Node)
+        ↓ (Multi-stream WebSocket Events)
+[Next-Gen Dashboard (React + Vite)]
+  ├── (Theater Mode / Grid View)
+  └── (Precision HUD / Detection Overlays)
 ```
 
 ---
 
-## ⚡ Technical Core
+## ⚡ Technical Core (Advanced Tier)
 
 | Component | Technology | Role |
 | :--- | :--- | :--- |
-| **Frontend** | React 19 + Vite | Premium Dark Mode Dashboard |
-| **Backend** | Flask | Central API Service |
-| **Real-time** | Socket.IO | Ultra-low latency video & alert delivery |
-| **AI Brain** | Ultralytics YOLOv8 | Person & Weapon Detection |
-| **Database** | SQLite3 | Local storage for events & camera configs |
-| **Imaging** | OpenCV | Frame processing & Base64 encoding |
+| **Frontend** | React 19 + Vite | Premium Glassmorphic Surveillance UI |
+| **Backend** | Flask | Enterprise API & Thread Orchestration |
+| **Real-time** | Socket.IO | High-fidelity Base64 frame transmission |
+| **AI Brain** | **YOLOv8 Medium** | **25M+ Parameter** Omni-Detection Engine |
+| **Vision** | OpenCV + **CLAHE** | Advanced Contrast & Lighting Optimization |
+| **Database** | SQLite3 | Real-time Persistence for Forensic Review |
 
 ---
 
-## 🚀 Optimized for Performance
+## 🚀 Optimized for Intelligence & Accuracy
 
-The system has been meticulously tuned for standard laptop processors to provide a professional experience without lag:
+The system is configured for professional-grade stability on standard hardware:
 
-- **15 FPS Target:** High-fluidity live video streams.
-- **Inference Throttling:** AI runs at 3Hz (detects threats 3 times per second) to keep the CPU cool.
-- **Dynamic Resolution:** Scans at 320px-480px to maximize detection speed.
-- **Async Processing:** Computer vision and frame streaming run on independent background threads.
-
----
-
-## 🎯 Intelligent Features
-
-### 🔍 Precision Detection
-- **Human Monitoring:** Tracks multiple persons simultaneously.
-- **Weapon Identification:** Instant recognition of Knives and Scissors with a sensitive 25% confidence floor.
-- **Source Selection:** Built-in dropdown to toggle between **PC Integrated Camera** and 📱 **Iriun Webcam** (Index 0, 1, 2).
-
-### 🚨 Behavioral Rules Engine
-- **Loitering:** Detects individuals stationary for more than 60 seconds.
-- **High-Velocity Alert:** Identifies "running" behavior through centroid tracking.
-- **Crowd Detection:** Monitors for unauthorized gatherings (5+ people).
-- **Incident Throttling:** Smart logic prevents the dashboard from being flooded with duplicate alerts.
-
-### 🛡️ Dashboard Experience
-- **Real-time HUD:** Overlaying bounding boxes and scan-lines.
-- **Live Alert Feed:** Categorized by severity (Critical, High, Medium, Low).
-- **Historic Event Log:** Full persistence of detections for forensic review.
-- **Active Stats:** Real-time counters for active cameras, total events, and current session threats.
+- **720p High-Definition:** Crystal clear live video for superior monitoring.
+- **Advanced 640px Scan:** AI scans frames at high resolution for maximum small-object detection.
+- **Omni-Detection Logic:** Full-spectrum identification of **80 classes** (Persons, Vehicles, Appliances, Animals, etc.).
+- **Dynamic Lighting (CLAHE):** Adaptive pre-processing ensures accuracy in shadows and low-light.
+- **Smart Throttling:** Balanced performance keeping detection fast without CPU fatigue.
 
 ---
 
-## 🛠️ Ready to Launch
+## 🎯 Professional Features
+
+### 🔍 Elite AI Intelligence
+- **Full Spectrum Visibility:** Monitors everything from persons to mobile phones, backpacks, and vehicles.
+- **Selective Safety Floor:** Weapons (Knives/Scissors) are detected with a sensitive **25%** floor; others require **45%** for maximum accuracy.
+- **Dynamic Labeling:** Automated, human-readable labels for all 80 object types.
+
+### 📽️ Advanced Monitoring Controls
+- **Theater Mode:** Double-click any camera to isolate it in a 1000px high-visibility "Focus View."
+- **Frame-Freeze (Pause):** Temporarily halt any live stream to analyze a static moment.
+- **Immersive Full Screen:** Native browser integration for max-view surveillance.
+- **Dual-Camera Command:** Pre-configured for **Laptop Webcams** and 📱 **Iriun USB Webcams**.
+
+### 🛡️ Forensic Hub
+- **Real-time HUD:** High-contrast bounding boxes with capitalized labels.
+- **Live Alert Feed:** Time-stamped, severity-aware notifications.
+- **Persistent Event Log:** Full database search for historical detections.
+
+---
+
+## 🛠️ Deployment Instructions
 
 ### 1. Requirements
-- Python 3.11 or higher
-- Node.js 18 or higher
+- Python 3.11+
+- Node.js 18+
+- Hardware Webcam (Laptop or Iriun)
 
-### 2. Startup (Backend)
+### 2. Startup (Backend AI Node)
 ```bash
 cd backend
 python -m venv venv
-# Activate venv followed by:
+# Activate venv, then:
 pip install -r requirements.txt
 python app.py
 ```
-> Server launches at **http://localhost:5000**
+> Server initializes at **http://localhost:5000**
 
-### 3. Startup (Frontend)
+### 3. Startup (Frontend Dashboard)
 ```bash
 cd frontend
 npm install
@@ -98,11 +101,12 @@ npm run dev
 
 ---
 
-## 🔐 Credentials
-- **Default Admin:** `admin`
-- **Password:** `admin123`
+## 🔐 System Access
+- **Superuser Username:** `admin`
+- **Default Password:** `admin123`
 
 ---
 
-## 📄 License
-MIT License — 2026 SentinelVision Engineering Team.
+## 📄 Recognition
+**SentinelVision Engineering Team — 2026**
+Advanced Surveillance For Everyone.

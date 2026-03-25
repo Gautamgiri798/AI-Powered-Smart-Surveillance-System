@@ -5,6 +5,7 @@ import { getCameras, startCamera, stopCamera } from '../services/api';
 export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, emitStartCamera, emitStopCamera }) {
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [focusedId, setFocusedId] = useState(null);
 
   useEffect(() => {
     loadCameras();
@@ -54,33 +55,63 @@ export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, e
     );
   }
 
+  const focusedCamera = cameras.find(c => c.camera_id === focusedId);
+
   return (
     <div className="video-section">
-      <div className="camera-grid">
-        {cameras.map((camera) => {
-          const isStreaming =
-            camera.is_streaming ||
-            cameraStatuses[camera.camera_id] === 'streaming';
-
-          return (
-            <VideoFeed
-              key={camera.camera_id}
-              camera={camera}
-              frame={frames[camera.camera_id]}
-              detectionData={detectionUpdates[camera.camera_id]}
-              isStreaming={isStreaming}
-              onStart={handleStart}
-              onStop={handleStop}
-            />
-          );
-        })}
-
-        {cameras.length === 0 && (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-            No cameras configured. Add cameras in Settings.
+      {focusedId && focusedCamera ? (
+        <div className="focused-view">
+          <div className="focused-header">
+            <h3>Focused View: {focusedCamera.name}</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => setFocusedId(null)}>
+              Back to Grid
+            </button>
           </div>
-        )}
-      </div>
+          <VideoFeed
+            camera={focusedCamera}
+            frame={frames[focusedCamera.camera_id]}
+            detectionData={detectionUpdates[focusedCamera.camera_id]}
+            isStreaming={
+              focusedCamera.is_streaming ||
+              cameraStatuses[focusedCamera.camera_id] === 'streaming'
+            }
+            onStart={handleStart}
+            onStop={handleStop}
+          />
+        </div>
+      ) : (
+        <div className="camera-grid">
+          {cameras.map((camera) => {
+            const isStreaming =
+              camera.is_streaming ||
+              cameraStatuses[camera.camera_id] === 'streaming';
+
+            return (
+              <div 
+                key={camera.camera_id} 
+                className="grid-item-wrapper"
+                onDoubleClick={() => setFocusedId(camera.camera_id)}
+                title="Double-click to focus"
+              >
+                <VideoFeed
+                  camera={camera}
+                  frame={frames[camera.camera_id]}
+                  detectionData={detectionUpdates[camera.camera_id]}
+                  isStreaming={isStreaming}
+                  onStart={handleStart}
+                  onStop={handleStop}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {cameras.length === 0 && (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+          No cameras configured. Add cameras in Settings.
+        </div>
+      )}
     </div>
   );
 }

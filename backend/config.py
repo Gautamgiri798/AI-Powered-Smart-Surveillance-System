@@ -12,14 +12,14 @@ class Config:
     JWT_EXPIRATION_HOURS = int(os.environ.get("JWT_EXPIRATION_HOURS", 24))
 
     # YOLO Configuration
-    YOLO_MODEL = os.environ.get("YOLO_MODEL", "yolov8n.pt")
+    YOLO_MODEL = os.environ.get("YOLO_MODEL", "yolov8m.pt")
     YOLO_CONFIDENCE = float(os.environ.get("YOLO_CONFIDENCE", 0.45))
-    DETECTION_CLASSES = [0, 43, 76]  # person, knife, scissors (COCO)
+    DETECTION_CLASSES = list(range(80))  # Detect all 80 COCO classes
     WEAPON_CLASSES = [43, 76]  # knife, scissors
 
     # Video Configuration
-    FRAME_WIDTH = int(os.environ.get("FRAME_WIDTH", 640))
-    FRAME_HEIGHT = int(os.environ.get("FRAME_HEIGHT", 480))
+    FRAME_WIDTH = int(os.environ.get("FRAME_WIDTH", 1280))
+    FRAME_HEIGHT = int(os.environ.get("FRAME_HEIGHT", 720))
     FPS_LIMIT = int(os.environ.get("FPS_LIMIT", 15))
 
     # Alert Configuration

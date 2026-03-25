@@ -6,7 +6,9 @@ import Dashboard from './components/Dashboard';
 import EventLog from './components/EventLog';
 import AlertPanel from './components/AlertPanel';
 import CameraGrid from './components/CameraGrid';
+import CameraManager from './components/CameraManager';
 import useSocket from './hooks/useSocket';
+import { Settings, Save } from 'lucide-react';
 
 const PAGE_TITLES = {
   dashboard: 'Surveillance Dashboard',
@@ -33,14 +35,14 @@ export default function App() {
 
   // Check for existing session
   useEffect(() => {
-    const savedUser = localStorage.getItem('safetysnap_user');
-    const savedToken = localStorage.getItem('safetysnap_token');
+    const savedUser = localStorage.getItem('sentinel_user');
+    const savedToken = localStorage.getItem('sentinel_token');
     if (savedUser && savedToken) {
       try {
         setUser(JSON.parse(savedUser));
       } catch {
-        localStorage.removeItem('safetysnap_user');
-        localStorage.removeItem('safetysnap_token');
+        localStorage.removeItem('sentinel_user');
+        localStorage.removeItem('sentinel_token');
       }
     }
   }, []);
@@ -50,8 +52,8 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('safetysnap_token');
-    localStorage.removeItem('safetysnap_user');
+    localStorage.removeItem('sentinel_token');
+    localStorage.removeItem('sentinel_user');
     setUser(null);
   };
 
@@ -94,31 +96,45 @@ export default function App() {
         return <EventLog />;
       case 'settings':
         return (
-          <div className="card" style={{ maxWidth: 600 }}>
-            <div className="card-header">
-              <h3>System Settings</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900 }}>
+            <div className="card">
+              <div className="card-header">
+                <h3><Settings size={18} /> System Configurations</h3>
+              </div>
+              <div className="card-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div className="form-group">
+                    <label>Detection Confidence Threshold</label>
+                    <input className="input" type="number" defaultValue="0.45" step="0.05" min="0.1" max="1.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Loitering Threshold (seconds)</label>
+                    <input className="input" type="number" defaultValue="30" />
+                  </div>
+                  <div className="form-group">
+                    <label>FPS Limit</label>
+                    <input className="input" type="number" defaultValue="15" />
+                  </div>
+                  <div className="form-group">
+                    <label>Alert Retention (days)</label>
+                    <input className="input" type="number" defaultValue="7" />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label>MongoDB Notification URI</label>
+                    <input className="input" type="text" defaultValue="mongodb://localhost:27017/" />
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <button className="btn btn-primary btn-sm">
+                      <Save size={14} /> Save System Settings
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div className="form-group">
-                  <label>Detection Confidence Threshold</label>
-                  <input className="input" type="number" defaultValue="0.45" step="0.05" min="0.1" max="1.0" />
-                </div>
-                <div className="form-group">
-                  <label>Loitering Threshold (seconds)</label>
-                  <input className="input" type="number" defaultValue="30" />
-                </div>
-                <div className="form-group">
-                  <label>FPS Limit</label>
-                  <input className="input" type="number" defaultValue="15" />
-                </div>
-                <div className="form-group">
-                  <label>MongoDB URI</label>
-                  <input className="input" type="text" defaultValue="mongodb://localhost:27017/" />
-                </div>
-                <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
-                  Save Settings
-                </button>
+
+            <div className="card">
+              <div className="card-body">
+                <CameraManager />
               </div>
             </div>
           </div>

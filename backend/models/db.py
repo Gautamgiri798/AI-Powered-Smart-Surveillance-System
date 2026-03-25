@@ -82,24 +82,19 @@ def init_db():
         conn.commit()
         print("[DB] 👤 Default admin user created (admin / admin123)")
 
-    # ── Seed sample cameras ──
-    cam_count = cur.execute("SELECT COUNT(*) FROM cameras").fetchone()[0]
-    # Re-seed if we don't have our new cam_4 or if count is old
-    if cam_count < 4:
-        # Clear old cameras to avoid duplicates on unique constraint
-        cur.execute("DELETE FROM cameras")
-        sample_cameras = [
-            ("cam_1", "System Webcam", "Security Desk", "0", "active", "usb"),
-            ("cam_2", "Entrance Gate", "Main building Entrance", "rtsp://admin:admin123@192.168.1.10/stream", "inactive", "rtsp"),
-            ("cam_3", "Parking Lot",   "North Parking",  "rtsp://admin:admin123@192.168.1.11/stream", "inactive", "rtsp"),
-            ("cam_4", "Server Room",   "Building B, Floor 2", "rtsp://admin:admin123@192.168.1.12/stream", "inactive", "rtsp"),
-        ]
-        cur.executemany(
-            "INSERT INTO cameras (camera_id, name, location, rtsp_url, status, type) VALUES (?, ?, ?, ?, ?, ?)",
-            sample_cameras
-        )
-        conn.commit()
-        print("[DB] 📷 System cameras re-seeded (cam_1 is now local webcam)")
+    # ── Seed primary cameras ──
+    # We only want 2 cameras now: System (1) and USB/Iriun (0)
+    cur.execute("DELETE FROM cameras")
+    sample_cameras = [
+        ("cam_1", "System Camera", "Laptop Desk", "1", "active", "usb"),
+        ("cam_2", "USB Camera",    "Iriun Webcam", "0", "active", "usb"),
+    ]
+    cur.executemany(
+        "INSERT INTO cameras (camera_id, name, location, rtsp_url, status, type) VALUES (?, ?, ?, ?, ?, ?)",
+        sample_cameras
+    )
+    conn.commit()
+    print("[DB] 📷 Dual-Camera system initialized (System + USB)")
 
     print(f"[DB] ✅ SQLite3 database initialized — {Config.SQLITE_DB}")
 

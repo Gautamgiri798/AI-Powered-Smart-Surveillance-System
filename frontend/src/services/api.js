@@ -58,6 +58,9 @@ export const startCamera = (cameraId) =>
 export const stopCamera = (cameraId) =>
   request(`/cameras/${cameraId}/stop`, { method: 'POST' });
 
+export const deleteCamera = (cameraId) =>
+  request(`/cameras/${cameraId}`, { method: 'DELETE' });
+
 // Events
 export const getEvents = (params = {}) => {
   const query = new URLSearchParams(params).toString();

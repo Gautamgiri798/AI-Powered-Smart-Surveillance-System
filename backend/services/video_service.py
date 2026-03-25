@@ -75,17 +75,20 @@ class CameraStream:
         return True
 
     def _open_camera(self, source, is_usb):
-        """Open camera with the best available backend."""
-        # Most modern webcams connect instantly using default backend 
-        # (forcing DSHOW or MSMF often causes a 5-10 sec delay on Windows)
+        """Open camera and set requested HD resolution."""
         cap = cv2.VideoCapture(source)
         if cap.isOpened():
-            print(f"[CAMERA {self.camera_id}] ✅ Backend OK")
+            # Attempt to set HD resolution for High Quality feed
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, Config.FRAME_WIDTH)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.FRAME_HEIGHT)
+            print(f"[CAMERA {self.camera_id}] ✅ Backend OK - Resolution set to {Config.FRAME_WIDTH}x{Config.FRAME_HEIGHT}")
             return cap
             
         print(f"[CAMERA {self.camera_id}] Trying DSHOW fallback...")
         cap = cv2.VideoCapture(source, cv2.CAP_DSHOW)
         if cap.isOpened():
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, Config.FRAME_WIDTH)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.FRAME_HEIGHT)
             return cap
             
         return None

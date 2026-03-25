@@ -6,8 +6,8 @@ from config import Config
 
 
 def encode_frame_to_base64(frame) -> str:
-    """Encode an OpenCV frame to base64 JPEG string."""
-    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
+    """Encode an OpenCV frame to a high-quality base64 JPEG string."""
+    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
     return base64.b64encode(buffer).decode('utf-8')
 
 
@@ -38,7 +38,8 @@ def draw_detections(frame, detections, class_names=None):
         x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
         conf = det["confidence"]
         cls = det["class"]
-        label = class_names.get(cls, f"Class {cls}")
+        # Use the label provided by the detection service (which is COCO-wide now)
+        label = det.get("label", f"Class {cls}").capitalize()
 
         # Color coding: red for weapons, green for persons
         if cls in Config.WEAPON_CLASSES:
