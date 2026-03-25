@@ -1,0 +1,11 @@
+flask==3.1.0
+flask-socketio==5.5.1
+flask-cors==5.0.1
+python-dotenv==1.1.0
+PyJWT==2.10.1
+bcrypt==4.3.0
+opencv-python==4.11.0.86
+ultralytics==8.3.95
+numpy==2.2.3
+eventlet==0.37.0
+Pillow==11.1.0
