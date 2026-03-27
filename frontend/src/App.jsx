@@ -7,15 +7,17 @@ import EventLog from './components/EventLog';
 import AlertPanel from './components/AlertPanel';
 import CameraGrid from './components/CameraGrid';
 import CameraManager from './components/CameraManager';
+import VideoLab from './components/VideoLab';
 import useSocket from './hooks/useSocket';
-import { Settings, Save } from 'lucide-react';
+import { Settings, Save, Shield, Cpu, Activity, Database, Clock } from 'lucide-react';
 
 const PAGE_TITLES = {
-  dashboard: 'Surveillance Dashboard',
-  cameras: 'Camera Management',
-  alerts: 'Alert Center',
-  events: 'Event Log',
-  settings: 'System Settings',
+  dashboard: 'Dashboard',
+  cameras: 'Cameras',
+  analysis: 'Analysis',
+  alerts: 'Alerts',
+  events: 'Events',
+  settings: 'Settings',
 };
 
 export default function App() {
@@ -28,6 +30,7 @@ export default function App() {
     frames,
     detectionUpdates,
     cameraStatuses,
+    sceneBriefings,
     emitStartCamera,
     emitStopCamera,
     clearAlerts,
@@ -71,6 +74,7 @@ export default function App() {
             frames={frames}
             detectionUpdates={detectionUpdates}
             cameraStatuses={cameraStatuses}
+            sceneBriefings={sceneBriefings}
             emitStartCamera={emitStartCamera}
             emitStopCamera={emitStopCamera}
             clearAlerts={clearAlerts}
@@ -86,6 +90,8 @@ export default function App() {
             emitStopCamera={emitStopCamera}
           />
         );
+      case 'analysis':
+        return <VideoLab />;
       case 'alerts':
         return (
           <div style={{ maxWidth: 500, height: '100%' }}>
@@ -96,46 +102,65 @@ export default function App() {
         return <EventLog />;
       case 'settings':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900 }}>
-            <div className="card">
-              <div className="card-header">
-                <h3><Settings size={18} /> System Configurations</h3>
+          <div className="dashboard-container" style={{ maxWidth: 900, margin: '0 auto' }}>
+            <div className="camera-card" style={{ padding: 40, background: 'var(--bg-card)', marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <Settings size={28} color="var(--accent-primary)" />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>System Core Settings</h2>
               </div>
-              <div className="card-body">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                  <div className="form-group">
-                    <label>Detection Confidence Threshold</label>
-                    <input className="input" type="number" defaultValue="0.45" step="0.05" min="0.1" max="1.0" />
-                  </div>
-                  <div className="form-group">
-                    <label>Loitering Threshold (seconds)</label>
-                    <input className="input" type="number" defaultValue="30" />
-                  </div>
-                  <div className="form-group">
-                    <label>FPS Limit</label>
-                    <input className="input" type="number" defaultValue="15" />
-                  </div>
-                  <div className="form-group">
-                    <label>Alert Retention (days)</label>
-                    <input className="input" type="number" defaultValue="7" />
-                  </div>
-                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                    <label>MongoDB Notification URI</label>
-                    <input className="input" type="text" defaultValue="mongodb://localhost:27017/" />
-                  </div>
-                  <div style={{ gridColumn: 'span 2' }}>
-                    <button className="btn btn-primary btn-sm">
-                      <Save size={14} /> Save System Settings
-                    </button>
-                  </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 40 }}>Calibrate the AI protocols and mission infrastructure parameters.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Shield size={12} /> Detection Confidence
+                  </label>
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem' }} type="number" defaultValue="0.45" step="0.05" />
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Clock size={12} /> Loitering Threshold (sec)
+                  </label>
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem' }} type="number" defaultValue="30" />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Cpu size={12} /> FPS Processing Limit
+                  </label>
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem' }} type="number" defaultValue="15" />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Activity size={12} /> Event Log Persistence (days)
+                  </label>
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem' }} type="number" defaultValue="7" />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, gridColumn: 'span 2' }}>
+                  <label style={{ fontSiz: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Database size={12} /> MongoDB Intelligence URI
+                  </label>
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem', width: '100%' }} type="text" defaultValue="mongodb://localhost:27017/" />
+                </div>
+
+                <div style={{ gridColumn: 'span 2', marginTop: 12 }}>
+                  <button className="engage-btn" style={{ background: 'var(--accent-primary) !important', width: '100%', justifyContent: 'center', height: 50, fontSize: '0.9rem' }}>
+                    <Save size={16} /> COMMIT CORE PROTOCOLS
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="card">
-              <div className="card-body">
-                <CameraManager />
+            <div className="camera-card" style={{ padding: 0, background: 'var(--bg-card)' }}>
+              <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Activity size={18} color="var(--accent-cyan)" /> NODE REGISTRY
+                </h3>
               </div>
+              <CameraManager />
             </div>
           </div>
         );

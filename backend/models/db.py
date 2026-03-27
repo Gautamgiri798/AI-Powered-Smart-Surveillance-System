@@ -83,11 +83,11 @@ def init_db():
         print("[DB] 👤 Default admin user created (admin / admin123)")
 
     # ── Seed primary cameras ──
-    # We only want 2 cameras now: System (1) and USB/Iriun (0)
+    # Re-mapped indices for the user's laptop: 0 is Integrated, 1 is Iriun
     cur.execute("DELETE FROM cameras")
     sample_cameras = [
-        ("cam_1", "System Camera", "Laptop Desk", "1", "active", "usb"),
-        ("cam_2", "USB Camera",    "Iriun Webcam", "0", "active", "usb"),
+        ("cam_1", "System Camera", "Laptop Integrated", "0", "active", "usb"),
+        ("cam_2", "Iriun Webcam",  "Secondary Source",  "1", "active", "usb"),
     ]
     cur.executemany(
         "INSERT INTO cameras (camera_id, name, location, rtsp_url, status, type) VALUES (?, ?, ?, ?, ?, ?)",
@@ -276,3 +276,11 @@ def clear_all_events():
     cur = conn.execute("DELETE FROM events")
     conn.commit()
     return cur.rowcount
+
+
+def delete_event(event_id):
+    """Delete a specific event by ID. Returns True if a row was deleted."""
+    conn = get_conn()
+    cur = conn.execute("DELETE FROM events WHERE id = ?", (int(event_id),))
+    conn.commit()
+    return cur.rowcount > 0

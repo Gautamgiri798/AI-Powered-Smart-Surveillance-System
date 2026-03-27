@@ -9,3 +9,6 @@ ultralytics==8.3.95
 numpy==2.2.3
 eventlet==0.37.0
 Pillow==11.1.0
+openvino==2024.6.0
+onnx==1.17.0
+onnxruntime==1.20.1

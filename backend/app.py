@@ -10,6 +10,8 @@ from config import Config
 # Initialize Flask app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = Config.SECRET_KEY
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024 # 500MB limit for mission clips
+
 
 # Initialize extensions
 CORS(app, origins=Config.CORS_ORIGINS)
@@ -20,11 +22,13 @@ from routes.auth_routes import auth_bp
 from routes.camera_routes import camera_bp
 from routes.event_routes import event_bp
 from routes.stream_routes import stream_bp
+from routes.analysis_routes import analysis_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(camera_bp)
 app.register_blueprint(event_bp)
 app.register_blueprint(stream_bp)
+app.register_blueprint(analysis_bp)
 
 
 # ----- Root & Health -----

@@ -72,5 +72,45 @@ export const acknowledgeEvent = (eventId) =>
 export const clearEvents = () =>
   request('/events/clear', { method: 'DELETE' });
 
+export const deleteEvent = (eventId) =>
+  request(`/events/${eventId}`, { method: 'DELETE' });
+
 // Streams
 export const getActiveStreams = () => request('/streams');
+
+// Video Analysis
+export const uploadVideoForAnalysis = async (file) => {
+  const formData = new FormData();
+  formData.append('video', file);
+
+  const token = localStorage.getItem('sentinel_token');
+  console.log('[API] 📤 Dispatching situational mission clip deep scan...');
+  const response = await fetch(`${API_BASE}/analysis/upload`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'SITUATIONAL_SCAN_FAILURE_UNK';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch (e) {
+      errorMessage = `SYSTEM_FAILURE_${response.status} // ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  try {
+    const data = await response.json();
+    console.log('[API] ✅ Situational mission scan complete:', data);
+    return data;
+  } catch (e) {
+    console.error('[API] ❌ Forensic JSON integrity failure:', e);
+    throw new Error('SITUATIONAL_TELEMETRY_DESC_FAIL // Malformed Response');
+  }
+
+};

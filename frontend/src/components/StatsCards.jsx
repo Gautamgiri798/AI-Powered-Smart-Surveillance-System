@@ -1,63 +1,59 @@
-import {
-  Camera,
-  Shield,
-  AlertTriangle,
-  Users,
-} from 'lucide-react';
+import { Camera, Activity, ShieldAlert, Users } from 'lucide-react';
 
 export default function StatsCards({ stats }) {
-  const cards = [
-    {
-      label: 'Active Cameras',
-      value: stats.activeCameras ?? 0,
-      icon: Camera,
-      color: 'cyan',
-      change: 'Real-time monitoring',
-    },
-    {
-      label: 'Total Events',
-      value: stats.totalEvents ?? 0,
-      icon: AlertTriangle,
-      color: 'orange',
-      change: 'All time',
-    },
-    {
-      label: 'Critical Alerts',
-      value: stats.criticalAlerts ?? 0,
-      icon: Shield,
-      color: 'red',
-      change: stats.criticalAlerts > 0 ? 'Action required' : 'All clear',
-    },
-    {
-      label: 'Persons Detected',
-      value: stats.personsDetected ?? 0,
-      icon: Users,
-      color: 'blue',
-      change: 'In current session',
-    },
-  ];
+  if (!stats) return null;
 
   return (
-    <div className="stats-row">
-      {cards.map((card, idx) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={card.label}
-            className="stat-card"
-            style={{ animationDelay: `${idx * 0.1}s` }}
-          >
-            <div className={`stat-icon ${card.color}`}>
-              <Icon size={22} />
-            </div>
-            <div className="stat-info">
-              <div className="stat-label">{card.label}</div>
-              <div className="stat-value">{card.value}</div>
-              <div className="stat-change">{card.change}</div>
-            </div>
-          </div>
-        );
-      })}
+    <div className="mission-stats-grid">
+      {/* Active Nodes */}
+      <div className="mission-node-card active-node">
+        <div className="mission-node-icon" style={{ color: 'var(--accent-blue)' }}>
+          <Camera size={22} strokeWidth={2.5} />
+        </div>
+        <div className="mission-node-data">
+          <div className="mission-node-label">ACTIVE_CAMERAS</div>
+          <div className="mission-node-value">{stats.activeCameras ?? 0}</div>
+          <div className="mission-node-sub">LIVE_VIDEO_FEEDS</div>
+        </div>
+      </div>
+
+      {/* Intelligence Stream */}
+      <div className="mission-node-card event-node">
+        <div className="mission-node-icon" style={{ color: 'var(--accent-orange)' }}>
+          <Activity size={22} strokeWidth={2.5} />
+        </div>
+        <div className="mission-node-data">
+          <div className="mission-node-label">TOTAL_EVENTS</div>
+          <div className="mission-node-value">{stats.totalEvents ?? 0}</div>
+          <div className="mission-node-sub">LOGGED_SITUATIONS</div>
+        </div>
+      </div>
+
+      {/* Threat Level */}
+      <div className="mission-node-card alert-node">
+        <div className="mission-node-icon" style={{ color: 'var(--accent-red)' }}>
+          <ShieldAlert size={22} strokeWidth={2.5} />
+        </div>
+        <div className="mission-node-data">
+          <div className="mission-node-label">SECURITY_ALERTS</div>
+          <div className="mission-node-value">{stats.criticalAlerts ?? 0}</div>
+          <div className="mission-node-sub">CRITICAL_THREATS</div>
+        </div>
+      </div>
+
+      {/* Subject Identity */}
+      <div className="mission-node-card intel-node">
+        <div className="mission-node-icon" style={{ color: 'var(--accent-cyan)' }}>
+          <Users size={22} strokeWidth={2.5} />
+        </div>
+        <div className="mission-node-data">
+          <div className="mission-node-label">PEOPLE_COUNT</div>
+          <div className="mission-node-value">{stats.personsDetected ?? 0}</div>
+          <div className="mission-node-sub">IDENTIFIED_PERSONS</div>
+        </div>
+      </div>
     </div>
+
+
   );
 }

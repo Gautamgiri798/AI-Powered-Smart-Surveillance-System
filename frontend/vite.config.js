@@ -9,11 +9,19 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+        timeout: 600000, // 10 minutes for deep scan
+        proxyTimeout: 600000,
       },
+
       '/socket.io': {
         target: 'http://localhost:5000',
         ws: true,
       },
+      '/static': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+
     },
   },
 })

@@ -1,6 +1,6 @@
 """Alert generation and rules engine service."""
 from datetime import datetime, timezone
-from models.db import create_event, get_events, get_event_stats, acknowledge_event as db_ack, clear_all_events
+from models.db import create_event, get_events, get_event_stats, acknowledge_event as db_ack, clear_all_events, delete_event as db_delete
 
 
 SEVERITY_LEVELS = {
@@ -77,3 +77,8 @@ def ack_event(event_id: str):
 def clear_events():
     """Delete all events. Returns count deleted."""
     return clear_all_events()
+
+
+def delete_event(event_id: str):
+    """Delete a specific alert by ID."""
+    return db_delete(event_id)

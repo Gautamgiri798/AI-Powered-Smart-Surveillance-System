@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from utils.auth_utils import token_required
 from services.alert_service import (
     get_recent_events, get_stats,
-    ack_event, clear_events
+    ack_event, clear_events, delete_event
 )
 
 event_bp = Blueprint("event", __name__)
@@ -53,3 +53,14 @@ def clear(current_user):
 
     count = clear_events()
     return jsonify({"message": f"Cleared {count} events"})
+
+
+@event_bp.route("/api/events/<event_id>", methods=["DELETE"])
+@token_required
+def delete(current_user, event_id):
+    """Delete a specific event."""
+    success = delete_event(event_id)
+    if success:
+        return jsonify({"message": "Event deleted"})
+    else:
+        return jsonify({"error": "Failed to delete event"}), 400
