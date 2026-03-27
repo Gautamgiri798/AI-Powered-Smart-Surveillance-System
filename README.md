@@ -1,112 +1,106 @@
-# 🛡️ SentinelVision — Advanced Omni-Detection Surveillance
+# 🛡️ SentinelVision — ELITE AI-INTELLIGENCE SURVEILLANCE V8.4
 
-> **The ultimate real-time AI surveillance dashboard. Driven by professional-grade computer vision, high-definition streaming, and omni-directional threat intelligence.**
+> **The definitive investigative command bridge. Driven by high-fidelity computer vision, real-time behavioral diagnostics, and NLP-engineered forensic situational analysis.**
 
-SentinelVision has evolved into an elite, full-spectrum monitoring system. It leverages the latest **YOLOv8 Medium** neural networks to identify **all 80 standard COCO object categories** across multiple high-definition camera feeds with precision and speed.
+SentinelVision is a professional-grade, full-spectrum monitoring system engineered for high-security environments. It leverages **OpenVINO-optimized YOLOv8** neural networks and **Natural Language Processing (NLP)** to identify, categorize, and narrate situational anomalies across a multi-node infrastructure.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Mission Architecture (V8.4 Core)
 
-SentinelVision utilizes a decoupled, high-throughput architecture designed for zero-latency monitoring:
+SentinelVision utilizes a decoupled, high-throughput architecture designed for zero-latency investigative operations:
 
 ```text
-[High-Def Inputs] (Laptop Webcam / Iriun USB / RTSP)
+[Multi-Node Inputs] (RTSP / USB / Virtual IP)
         ↓
-[Advanced Processing Node]
-  ├── (CLAHE Video Enhancement)
-  ├── (High-Fidelity 720p Pipeline)
-  └── (YOLOv8-Medium Inference Engine)
-        ↓ (Real-time Frames + Dynamic Metadata)
-[Backend Orchestrator (Flask + SocketIO)]
-  ├── (Storage: SQLite3 Persistent Logs)
-  └── (Intelligence: Behavioral Rules Node)
-        ↓ (Multi-stream WebSocket Events)
-[Next-Gen Dashboard (React + Vite)]
-  ├── (Theater Mode / Grid View)
-  └── (Precision HUD / Detection Overlays)
+[Intel® OpenVINO™ Processing Node]
+  ├── (High-Velocity Inference Engine)
+  ├── (Behavioral Anomaly Diagnostics)
+  └── (NLP Situational Briefing Engine)
+        ↓ (Real-time Frames + Intelligence Metadata)
+[Backend Orchestrator (Flask + Multi-Threaded SocketIO)]
+  ├── (Storage: SQLite3 Persistent Forensic Logs)
+  └── (Analysis: Advanced Sequence Intelligence)
+        ↓ (Multi-stream WebSocket Tunnel)
+[Obsidian-Terminal Interface (React 19 + Vite)]
+  ├── (Mission Dashboard / Infrastructure Lab)
+  └── (Forensic Video Lab / AI Scene Briefing)
 ```
 
 ---
 
-## ⚡ Technical Core (Advanced Tier)
+## ⚡ Technical Core (Elite Tier)
 
 | Component | Technology | Role |
 | :--- | :--- | :--- |
-| **Frontend** | React 19 + Vite | Premium Glassmorphic Surveillance UI |
-| **Backend** | Flask | Enterprise API & Thread Orchestration |
-| **Real-time** | Socket.IO | High-fidelity Base64 frame transmission |
-| **AI Brain** | **YOLOv8 Medium** | **25M+ Parameter** Omni-Detection Engine |
-| **Vision** | OpenCV + **CLAHE** | Advanced Contrast & Lighting Optimization |
-| **Database** | SQLite3 | Real-time Persistence for Forensic Review |
+| **Interface** | React 19 + Vite | Premium Glassmorphic Obsidian-Terminal UI |
+| **Backend** | Python Flask | Enterprise-grade API & Forensic Orchestration |
+| **Real-time** | Socket.IO | High-velocity Base64 telemetry transmission |
+| **AI Brain** | **YOLOv8 + OpenVINO** | **Intel-Optimized** Omni-Detection Engine |
+| **Intelligence** | NLP (Google Generative AI) | Automated Forensic Narrative Generation |
+| **Persistence** | SQLite3 | Real-time Database for Historical Investigation |
 
 ---
 
-## 🚀 Optimized for Intelligence & Accuracy
+## 📽️ Elite Surveillance Features
 
-The system is configured for professional-grade stability on standard hardware:
+### 🧠 Advanced AI & NLP Intelligence
+- **Omni-Detection Protocol:** Real-time identification of **80+ COCO categories** (Persons, Vehicles, Weapons, etc.) at peak FPS.
+- **Scene Briefing (NLP):** Automatically generates human-readable forensic intelligence reports from live camera telemetry.
+- **Behavioral Diagnostics:** Detects suspicious movements and anomaly patterns with time-stamped precision.
+- **OpenVINO Velocity:** Hardware-accelerated inference for zero-lag monitoring on standard Intel silicon.
 
-- **720p High-Definition:** Crystal clear live video for superior monitoring.
-- **Advanced 640px Scan:** AI scans frames at high resolution for maximum small-object detection.
-- **Omni-Detection Logic:** Full-spectrum identification of **80 classes** (Persons, Vehicles, Appliances, Animals, etc.).
-- **Dynamic Lighting (CLAHE):** Adaptive pre-processing ensures accuracy in shadows and low-light.
-- **Smart Throttling:** Balanced performance keeping detection fast without CPU fatigue.
+### 🧪 Forensic Video Lab
+- **Deep Historical Review:** Access archived mission recordings and analyze recorded telemetry.
+- **Precision Playback:** Investigative controls for frame-by-frame situational analysis.
+- **Forensic Zoom:** Isolate and focus on specific operational sectors within recorded nodes.
 
----
+### 🛠️ Infrastructure Lab (Camera Manager)
+- **Dynamic Node Registry:** Add, remove, or modify mission nodes (RTSP/USB) via an elite terminal interface.
+- **Elite Mission Tagging:** Assign high-fidelity display names and location metadata to all operational nodes.
+- **Zero-Latency Switching:** Transition between "Theater" focus view and "Grid" situational awareness.
 
-## 🎯 Professional Features
-
-### 🔍 Elite AI Intelligence
-- **Full Spectrum Visibility:** Monitors everything from persons to mobile phones, backpacks, and vehicles.
-- **Selective Safety Floor:** Weapons (Knives/Scissors) are detected with a sensitive **25%** floor; others require **45%** for maximum accuracy.
-- **Dynamic Labeling:** Automated, human-readable labels for all 80 object types.
-
-### 📽️ Advanced Monitoring Controls
-- **Theater Mode:** Double-click any camera to isolate it in a 1000px high-visibility "Focus View."
-- **Frame-Freeze (Pause):** Temporarily halt any live stream to analyze a static moment.
-- **Immersive Full Screen:** Native browser integration for max-view surveillance.
-- **Dual-Camera Command:** Pre-configured for **Laptop Webcams** and 📱 **Iriun USB Webcams**.
-
-### 🛡️ Forensic Hub
-- **Real-time HUD:** High-contrast bounding boxes with capitalized labels.
-- **Live Alert Feed:** Time-stamped, severity-aware notifications.
-- **Persistent Event Log:** Full database search for historical detections.
+### 💎 Obsidian-Terminal Aesthetic
+- **Mission Dashboard:** A premium, dark-mode command center with glassmorphic depth and neon-glow status indicators.
+- **Tacitcal HUD:** High-contrast bounding boxes with real-time classification overlays.
+- **Live Alert Panel:** Severity-aware notification feed for immediate situational response.
 
 ---
 
 ## 🛠️ Deployment Instructions
 
-### 1. Requirements
-- Python 3.11+
-- Node.js 18+
-- Hardware Webcam (Laptop or Iriun)
+### 1. Prerequisites
+- **Python 3.11+** (Intel optimization recommended)
+- **Node.js 18+**
+- **Google AI API Key** (Required for NLP Scene Briefing)
 
-### 2. Startup (Backend AI Node)
+### 2. Backend Initialization (Mission Core)
 ```bash
 cd backend
 python -m venv venv
-# Activate venv, then:
+# Linux/Mac: source venv/bin/activate | Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
-> Server initializes at **http://localhost:5000**
+> Mission Core initializes at **http://localhost:5000**
 
-### 3. Startup (Frontend Dashboard)
+### 3. Frontend Deployment (Command Bridge)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-> Dashboard launches at **http://localhost:3000**
+> Command Bridge launches at **http://localhost:3000**
 
 ---
 
-## 🔐 System Access
-- **Superuser Username:** `admin`
-- **Default Password:** `admin123`
+## 🔐 Credentials
+- **Authorized ID:** `admin`
+- **Security Access:** `admin123`
 
 ---
 
 ## 📄 Recognition
-**SentinelVision Engineering Team — 2026**
-Advanced Surveillance For Everyone.
+**SentinelVision Engineering — 2026**
+*Advanced Surveillance. Professional Intelligence. Absolute Visibility.*
+
