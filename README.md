@@ -7,12 +7,14 @@
 
 ---
 
-### 🚀 Core AI Architecture
-The system utilizes a **Multi-Stage Inference Pipeline** optimized for high-velocity action recognition on local edge hardware:
+### 🚀 Core AI Architecture & Models
+The system utilizes a **Multi-Stage Inference Pipeline** optimized for edge hardware:
 
-*   **Dual-Engine Pass:** Simultaneous execution of `YOLOv8s-Detection` (for environment threats) and `YOLOv8s-Pose` (for human skeletal tracking).
-*   **12Hz Action Pipeline:** Advanced inference sampling at **~80ms latency**, enabling the system to capture rapid human actions (waving, phoning, falling) without frame-skip.
-*   **Sentry-LSTM Temporal Memory:** A sliding-window behavior classifier that analyzes 10+ frames of movement history to distinguish between "Standing" and "Sitting", or "Walking" and "Pacing".
+*   **Dual-Engine Pass:** Simultaneous execution of two high-performance models:
+    *   **`yolov8s_openvino_model`**: Optimized for broad environmental object detection (weapons, suitcases, vehicles).
+    *   **`yolov8s-pose_openvino_model`**: Specialized for high-precision human skeletal tracking (17 keypoints).
+*   **12Hz Action Pipeline:** Advanced inference sampling at **~80ms latency**, enabling the system to capture rapid human actions without frame-skip.
+*   **Sentry-LSTM Temporal Memory:** A sliding-window behavior classifier that analyzes movement history to distinguish complex behavioral patterns.
 
 ---
 
@@ -32,19 +34,57 @@ Our proprietary **Human Action Recognition** engine groups behaviors into profes
 
 ---
 
-### 💎 Key Features & Experience
-*   **Tactical Glassmorphic Dashboard:** A premium, dark-mode React interface featuring a real-time behavioral feed and a live "Dynamic Activity Matrix".
-*   **Multimodal Scene Briefing:** NLP-powered forensic reports that narrate the scene in human-readable tactical investigative briefings.
-*   **Instant Threat Response:** Real-time visual and auditory alerts (Intrusion/Weapon) with millisecond-grade event logging.
-*   **Low-Level Portability:** Optimized for **OpenVINO CPU** inference, enabling high-performance AI deployment on standard laptops and NVRs without expensive GPUs.
+### 🛠️ Technology Stack
+
+**Backend Mission Core:**
+- **Language:** Python 3.10+
+- **Computer Vision:** OpenCV (Inference + Post-processing)
+- **AI Framework:** Ultralytics YOLOv8 (OpenVINO optimized)
+- **Streaming:** WebSockets (Flask-SocketIO) for <100ms video telemetry
+- **Database:** SQLite3 with WAL mode for high-frequency event logging
+- **Multimodal AI:** Custom NLP Scene Briefing Engine
+
+**Tactical Frontend:**
+- **Framework:** React 18+
+- **Build Tool:** Vite (Ultra-fast HMR)
+- **Styling:** Vanilla CSS3 (Custom Glass-Design System), Tailwind (Utilities)
+- **Icons:** Lucide React
+- **State Management:** React Hooks + Socket.IO-client
 
 ---
 
-### 🛠️ Hardware & Tech Stack
-*   **Backend:** Python 3.10+, Flask, Socket.IO, OpenCV, Ultralytics YOLOv8
-*   **AI Engine:** OpenVINO Optimized (Pose + Detection)
-*   **Frontend:** React, Tailwind Glass-CSS, Framer Motion, Lucide Icons
-*   **Database:** SQLite3 / MongoDB Interaction logs
+### 📂 Project Structure
+
+```text
+SENTINEL-VISION/
+├── backend/
+│   ├── app.py                  # Mission Core Entry Point
+│   ├── config.py               # Global AI Thresholds & Security Params
+│   ├── services/
+│   │   ├── detection_service.py# Dual-Engine AI Inference (YOLO + Pose)
+│   │   ├── behavior_service.py # High-Level Heuristics & Activity Logic
+│   │   ├── sequence_service.py # Sentry-LSTM Temporal Sequence Analysis
+│   │   ├── tracking_service.py # Subject ID Persistence & Velocity Analysis
+│   │   ├── video_service.py    # Multi-threaded Stream Processing
+│   │   └── alert_service.py    # DB Persistence & Trigger Dispatch
+│   ├── models/                 # AI Model Registries
+│   └── utils/                  # Thermal/CLAHE Image Pre-processors
+├── frontend/
+│   ├── src/
+│   │   ├── components/         # Glassmorphic UI Library (Dashboard, Grid, etc.)
+│   │   ├── hooks/              # missions hooks (useSocket)
+│   │   └── services/           # API Proxies
+│   └── public/                 # Mission Assets
+└── reports/                    # Generated Incident Forensic Briefings
+```
+
+---
+
+### 💎 Key Experience Features
+*   **Tactical Glassmorphic Dashboard:** A premium, dark-mode React interface.
+*   **Multimodal Scene Briefing:** NLP-powered forensic reports that narrate the scene.
+*   **Instant Threat Response:** Real-time visual and auditory alerts.
+*   **Edge Optimization:** Optimized for **OpenVINO CPU** inference.
 
 ---
 
@@ -52,8 +92,8 @@ Our proprietary **Human Action Recognition** engine groups behaviors into profes
 
 1.  **Clone & Initialize:**
     ```bash
-    git clone https://github.com/Gautamgiri798/Sentinel-Vision.git
-    cd Sentinel-Vision
+    git clone https://github.com/Gautamgiri798/AI-Powered-Smart-Surveillance-System.git
+    cd AI-Powered-Smart-Surveillance-System
     ```
 
 2.  **Backend Setup:**
@@ -74,5 +114,5 @@ Our proprietary **Human Action Recognition** engine groups behaviors into profes
 
 <div align="center">
   <sub>Developed for the Comprehensive Seminar on AI-Powered Smart Surveillance.</sub><br/>
-  <strong>🛡️ MISSION_SECURE // BIO_METRIC_ENGINE_NOMINAL</strong>
+  <strong>🛡️ MISSION_SECURE // BIO_METRIC_ENGINE_NOMINAL // V8.4.2</strong>
 </div>
