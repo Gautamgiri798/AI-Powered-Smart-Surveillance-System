@@ -116,6 +116,7 @@ class CameraStream:
         """Main streaming loop with asynchronous detection."""
         frame_delay = 1.0 / Config.FPS_LIMIT
         is_file = isinstance(self.source, str) and not self.source.startswith("rtsp://")
+        last_emit_time = 0
         
         while self.running:
             ret, frame = self.cap.read()
@@ -128,7 +129,16 @@ class CameraStream:
                 time.sleep(1)
                 continue
 
+            # Clear buffer for live feeds by dropping frames; throttle video files with sleep
+            if not is_file:
+                now = time.time()
+                if now - last_emit_time < frame_delay:
+                    continue
+                last_emit_time = now
+
             frame = resize_frame(frame)
+            if hasattr(Config, 'MIRROR_FEED') and Config.MIRROR_FEED:
+                frame = cv2.flip(frame, 1)
             self.frame_count += 1
             self._fps_counter += 1
 
@@ -139,9 +149,9 @@ class CameraStream:
                 self._fps_counter = 0
                 self._fps_start = time.time()
 
-            # Run detection asynchronously (max ~3Hz)
+            # Run high-frequency detection asynchronously (target ~12Hz for action recognition)
             now = time.time()
-            if not self._is_detecting and (now - self._last_detect_time) > 0.3:
+            if not self._is_detecting and (now - self._last_detect_time) > 0.08:
                 self._is_detecting = True
                 self._last_detect_time = now
                 threading.Thread(target=self._run_detection, args=(frame.copy(),), daemon=True).start()
@@ -160,14 +170,15 @@ class CameraStream:
                     "timestamp": time.time()
                 })
 
-            time.sleep(frame_delay)
+            if is_file:
+                time.sleep(frame_delay)
 
     def _run_detection(self, frame):
         """Worker function for detection and analysis."""
         try:
             detections = detect_objects(frame)
             tracker = get_tracker(self.camera_id)
-            detections = tracker.update(detections)
+            detections = tracker.update(detections, frame=frame)
             self.latest_detections = detections
 
             # Analyze behavior (Rule-based + SentryLSTM)
@@ -183,15 +194,19 @@ class CameraStream:
             
             if self.socketio:
                 self.socketio.emit("scene_briefing", briefing)
+                self.socketio.emit("live_behaviors", {
+                    "camera_id": self.camera_id,
+                    "behaviors": behaviors
+                })
 
             # Handle Alerts (Decoupled emitting)
             for behavior in behaviors:
                 b_type = behavior.get("id") or behavior["type"]
                 now = time.time()
                 
-                # Severity-based Throttling
+                # Aggressive real-time reporting for human activity metrics
                 severity = behavior.get("severity", "info")
-                throttle = 1 if severity in ["critical", "high"] else 5
+                throttle = 1.0 # 1Hz reporting frequency for all situational updates
                 
                 if now - self._last_alert_time.get(b_type, 0) > throttle:
                     self._last_alert_time[b_type] = now
@@ -212,10 +227,15 @@ class CameraStream:
                     "camera_id": self.camera_id,
                     "fps": round(self.fps, 1)
                 })
+                print(f"[DEBUG] Emit detection_update: {summary}")
                 self.socketio.emit("detection_update", summary)
 
         except Exception as e:
+            import traceback
+            err_msg = traceback.format_exc()
             print(f"[CAMERA {self.camera_id}] ❌ AI Thread error: {e}")
+            with open("error.log", "a") as f:
+                f.write(err_msg + "\n")
         finally:
             self._is_detecting = False
 

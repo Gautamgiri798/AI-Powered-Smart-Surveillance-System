@@ -12,6 +12,7 @@ export default function useSocket() {
   const [detectionUpdates, setDetectionUpdates] = useState({});
   const [cameraStatuses, setCameraStatuses] = useState({});
   const [sceneBriefings, setSceneBriefings] = useState({});
+  const [liveBehaviors, setLiveBehaviors] = useState({});
 
   useEffect(() => {
     // Robust backend URL detection
@@ -83,6 +84,15 @@ export default function useSocket() {
       }
     });
 
+    socket.on('live_behaviors', (data) => {
+      if (data) {
+        setLiveBehaviors((prev) => ({
+          ...prev,
+          [data.camera_id]: data.behaviors,
+        }));
+      }
+    });
+
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
     };
@@ -111,6 +121,7 @@ export default function useSocket() {
     detectionUpdates,
     cameraStatuses,
     sceneBriefings,
+    liveBehaviors,
     emitStartCamera,
     emitStopCamera,
     clearAlerts,

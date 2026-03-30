@@ -6,8 +6,8 @@ from config import Config
 
 
 def encode_frame_to_base64(frame) -> str:
-    """Encode an OpenCV frame to a high-quality base64 JPEG string."""
-    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    """Encode an OpenCV frame to a high-performance base64 JPEG string (Optimized for zero-lag)."""
+    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
     return base64.b64encode(buffer).decode('utf-8')
 
 

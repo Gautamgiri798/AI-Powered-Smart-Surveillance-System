@@ -3,14 +3,19 @@ import VideoFeed from './VideoFeed';
 import { getCameras, startCamera, stopCamera } from '../services/api';
 import { ChevronLeft, Grid } from 'lucide-react';
 
-export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, emitStartCamera, emitStopCamera }) {
+export default function CameraGrid({ 
+  frames, 
+  detectionUpdates, 
+  cameraStatuses, 
+  emitStartCamera, 
+  emitStopCamera,
+  focusedId,
+  setFocusedId 
+}) {
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [focusedId, setFocusedId] = useState(null);
 
-  useEffect(() => {
-    loadCameras();
-  }, []);
+  useEffect(() => { loadCameras(); }, []);
 
   const loadCameras = async () => {
     try {
@@ -29,7 +34,6 @@ export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, e
       emitStartCamera(cameraId);
       loadCameras();
     } catch (err) {
-      console.error('Failed to start camera:', err);
       emitStartCamera(cameraId);
     }
   };
@@ -40,7 +44,6 @@ export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, e
       emitStopCamera(cameraId);
       loadCameras();
     } catch (err) {
-      console.error('Failed to stop camera:', err);
       emitStopCamera(cameraId);
     }
   };
@@ -58,33 +61,65 @@ export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, e
   return (
     <div className="video-section">
       {focusedId && focusedCamera ? (
-        <div className="focused-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="focused-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Grid size={18} />
-              FOCUSED MISSION CONTROL: {focusedCamera.name}
+        <div className="focused-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="focused-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 16, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <Grid size={22} color="var(--accent-primary)" />
+              <span style={{ opacity: 0.5, fontWeight: 500 }}>FOCUSED_COMMAND //</span> {focusedCamera.name}
             </h3>
             <button 
-              className="engage-btn" 
-              style={{ background: 'rgba(255,255,255,0.02) !important', color: 'var(--text-secondary) !important', border: '1px solid var(--border-light)', padding: '10px 18px', fontSize: '0.75rem' }} 
+              className="back-wall-btn-tactical" 
               onClick={() => setFocusedId(null)}
+              style={{ 
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                color: 'var(--accent-primary)',
+                padding: '12px 24px',
+                fontSize: '0.7rem',
+                fontWeight: 900,
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.2em',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(99, 102, 241, 0.1)'
+              }}
             >
-              <ChevronLeft size={16} />
-              BACK TO WALL
+              <ChevronLeft size={18} strokeWidth={3} />
+              <span>EXIT_FOCUS</span>
             </button>
           </div>
-          <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
-            <VideoFeed
-              camera={focusedCamera}
-              frame={frames[focusedCamera.camera_id]}
-              detectionData={detectionUpdates[focusedCamera.camera_id]}
-              isStreaming={
-                focusedCamera.is_streaming ||
-                cameraStatuses[focusedCamera.camera_id] === 'streaming'
-              }
-              onStart={handleStart}
-              onStop={handleStop}
-            />
+          
+          <div className="focused-theater-container" style={{ 
+            width: '100%', 
+            position: 'relative',
+            borderRadius: 24,
+            padding: 4,
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%)',
+            boxShadow: '0 0 80px rgba(0,0,0,0.5), inset 0 0 40px rgba(99, 102, 241, 0.05)',
+            border: '1px solid rgba(255,255,255,0.03)',
+            overflow: 'hidden'
+          }}>
+            <div style={{ height: '480px', width: '100%', display: 'flex', flexDirection: 'column' }}>
+              <VideoFeed
+                camera={focusedCamera}
+                frame={frames[focusedCamera.camera_id]}
+                detectionData={detectionUpdates[focusedCamera.camera_id]}
+                isStreaming={
+                  focusedCamera.is_streaming ||
+                  cameraStatuses[focusedCamera.camera_id] === 'streaming'
+                }
+                onStart={handleStart}
+                onStop={handleStop}
+                showFullscreen={true}
+              />
+            </div>
+            {/* Ambient Background Scanlines */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(transparent, transparent 2px, rgba(99, 102, 241, 0.01) 3px)', opacity: 0.5, zIndex: -1 }}></div>
           </div>
         </div>
       ) : (
@@ -109,6 +144,7 @@ export default function CameraGrid({ frames, detectionUpdates, cameraStatuses, e
                   isStreaming={isStreaming}
                   onStart={handleStart}
                   onStop={handleStop}
+                  showFullscreen={false}
                 />
               </div>
             );

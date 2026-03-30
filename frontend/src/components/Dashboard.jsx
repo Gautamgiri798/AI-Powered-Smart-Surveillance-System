@@ -3,6 +3,7 @@ import StatsCards from './StatsCards';
 import CameraGrid from './CameraGrid';
 import AlertPanel from './AlertPanel';
 import SceneBriefing from './SceneBriefing';
+import ActivityMonitor from './ActivityMonitor';
 import { getEventStats } from '../services/api';
 
 export default function Dashboard({
@@ -11,11 +12,13 @@ export default function Dashboard({
   detectionUpdates = {},
   cameraStatuses = {},
   sceneBriefings = {},
+  liveBehaviors = {},
   emitStartCamera,
   emitStopCamera,
   clearAlerts,
 }) {
   const [eventStats, setEventStats] = useState(null);
+  const [focusedId, setFocusedId] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -51,10 +54,10 @@ export default function Dashboard({
   }, [cameraStatuses, frames, detectionUpdates, eventStats]);
 
   return (
-    <div className="dashboard-container">
-      <StatsCards stats={stats} />
+    <div className={`dashboard-container ${focusedId ? 'theater-mode' : ''}`}>
+      {!focusedId && <StatsCards stats={stats} />}
 
-      <div className="tactical-layout">
+      <div className={`tactical-layout ${focusedId ? 'theater-layout' : ''}`}>
         <div className="video-section">
           <CameraGrid
             frames={frames || {}}
@@ -62,14 +65,36 @@ export default function Dashboard({
             cameraStatuses={cameraStatuses || {}}
             emitStartCamera={emitStartCamera}
             emitStopCamera={emitStopCamera}
+            focusedId={focusedId}
+            setFocusedId={setFocusedId}
           />
         </div>
         
         <div className="intelligence-column">
+          <ActivityMonitor 
+            alerts={alerts || []} 
+            liveBehaviors={liveBehaviors || {}} 
+          />
           <SceneBriefing briefings={sceneBriefings || {}} />
           <AlertPanel alerts={alerts || []} onClear={clearAlerts} />
         </div>
       </div>
+      <style>{`
+        .theater-mode {
+          padding-top: 10px !important;
+        }
+        .theater-layout {
+          grid-template-columns: 1fr 350px !important;
+          gap: 30px !important;
+        }
+        .theater-mode .video-section {
+          animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

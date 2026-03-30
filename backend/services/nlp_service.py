@@ -34,10 +34,25 @@ class SceneUnderstandingService:
             summary_parts.append(f"CRITICAL: {', '.join(threats)} identified within active perimeter.")
 
         for b in behaviors:
-            if b["type"] == "fall_detected":
+            b_type = b["type"]
+            if b_type in ["fall_detected", "sustained_fall"]:
                 summary_parts.append("A potential medical emergency (individual down) is detected.")
-            elif b["type"] == "intrusion":
+            elif b_type == "intrusion":
                 summary_parts.append("Unauthorized breach of the restricted security zone recorded.")
+            elif b_type == "fight_detected":
+                summary_parts.append("🥊 CRITICAL: Violent physical conflict/fighting detected between subjects.")
+            elif b_type == "waving":
+                summary_parts.append("Subject is actively waving hands, signalling the camera.")
+            elif b_type == "hands_on_head":
+                summary_parts.append("Subject is exhibiting distress/panic posture (hands on head).")
+            elif b_type == "phoning":
+                summary_parts.append("Subject is currently using a mobile phone.")
+            elif b_type == "crouching":
+                summary_parts.append("Subject is detected in a suspicious/crouched posture.")
+            elif b_type == "rapid_approach":
+                summary_parts.append("⚠️ Subject is rapidly advancing directly towards the camera lens.")
+            elif b_type == "abandoned_object":
+                summary_parts.append("📦 A package/bag has been left unattended in a high-security area.")
 
         summary = " ".join(summary_parts) if summary_parts else "Routine movement detected in surveillance area."
 

@@ -31,6 +31,7 @@ export default function App() {
     detectionUpdates,
     cameraStatuses,
     sceneBriefings,
+    liveBehaviors,
     emitStartCamera,
     emitStopCamera,
     clearAlerts,
@@ -75,6 +76,7 @@ export default function App() {
             detectionUpdates={detectionUpdates}
             cameraStatuses={cameraStatuses}
             sceneBriefings={sceneBriefings}
+            liveBehaviors={liveBehaviors}
             emitStartCamera={emitStartCamera}
             emitStopCamera={emitStopCamera}
             clearAlerts={clearAlerts}

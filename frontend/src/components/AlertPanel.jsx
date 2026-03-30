@@ -61,7 +61,7 @@ export default function AlertPanel({ alerts = [], onClear }) {
                     {displayType}
                   </div>
                   <div className="alert-meta" style={{ fontSize: '0.55rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {(alert.timestamp || 'NOW').split('T').pop()?.substring(0, 8)}
+                    {alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString([], { hour12: false }) : 'NOW'}
                   </div>
                 </div>
                 <div className="alert-desc" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: 500 }}>

@@ -4,164 +4,185 @@ import time
 from collections import defaultdict
 
 
+try:
+    from deep_sort_realtime.deepsort_tracker import DeepSort
+except ImportError:
+    DeepSort = None
+
 class SimpleTracker:
     """
-    Centroid-based multi-object tracker.
-    Assigns persistent IDs to detected objects across frames.
+    Centroid-based multi-object tracker (Fallback).
     """
-
     def __init__(self, max_disappeared=30, max_distance=80):
         self.next_id = 0
-        self.objects = {}        # id -> centroid
-        self.disappeared = {}    # id -> frame count since last seen
-        self.positions = defaultdict(list)  # id -> list of (centroid, timestamp)
+        self.objects = {}
+        self.disappeared = {}
+        self.positions = defaultdict(list)
         self.max_disappeared = max_disappeared
         self.max_distance = max_distance
 
     def _distance(self, p1, p2):
         return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
-    def update(self, detections):
-        """
-        Update tracker with new detections.
-        
-        Args:
-            detections: list of dicts with 'center' key
-        
-        Returns:
-            list of dicts: detections with added 'track_id' key
-        """
+    def update(self, detections, frame=None):
         if len(detections) == 0:
-            # Mark all existing objects as disappeared
             for obj_id in list(self.disappeared.keys()):
                 self.disappeared[obj_id] += 1
                 if self.disappeared[obj_id] > self.max_disappeared:
                     self._deregister(obj_id)
             return detections
-
         input_centroids = [d["center"] for d in detections]
-
         if len(self.objects) == 0:
-            # Register all new detections
             for i, centroid in enumerate(input_centroids):
                 track_id = self._register(centroid)
                 detections[i]["track_id"] = track_id
             return detections
-
-        # Match existing objects to new detections using min distance
         object_ids = list(self.objects.keys())
         object_centroids = list(self.objects.values())
-
-        used_rows = set()
-        used_cols = set()
+        used_rows, used_cols = set(), set()
         assignments = {}
-
-        # Compute distance matrix and find best matches
         distances = []
         for i, obj_centroid in enumerate(object_centroids):
             for j, det_centroid in enumerate(input_centroids):
                 dist = self._distance(obj_centroid, det_centroid)
                 distances.append((dist, i, j))
-
         distances.sort(key=lambda x: x[0])
-
         for dist, row, col in distances:
-            if row in used_rows or col in used_cols:
-                continue
-            if dist > self.max_distance:
-                continue
-            obj_id = object_ids[row]
-            assignments[col] = obj_id
-            used_rows.add(row)
-            used_cols.add(col)
-
-        # Update matched objects
+            if row in used_rows or col in used_cols or dist > self.max_distance: continue
+            assignments[col] = object_ids[row]
+            used_rows.add(row); used_cols.add(col)
         for col, obj_id in assignments.items():
             self.objects[obj_id] = input_centroids[col]
             self.disappeared[obj_id] = 0
             self.positions[obj_id].append((input_centroids[col], time.time()))
-            # Keep only last 100 positions
-            if len(self.positions[obj_id]) > 100:
-                self.positions[obj_id] = self.positions[obj_id][-100:]
+            if len(self.positions[obj_id]) > 100: self.positions[obj_id] = self.positions[obj_id][-100:]
             detections[col]["track_id"] = obj_id
-
-        # Handle unmatched objects (disappeared)
         for row in range(len(object_centroids)):
             if row not in used_rows:
                 obj_id = object_ids[row]
                 self.disappeared[obj_id] += 1
-                if self.disappeared[obj_id] > self.max_disappeared:
-                    self._deregister(obj_id)
-
-        # Register new detections
+                if self.disappeared[obj_id] > self.max_disappeared: self._deregister(obj_id)
         for col in range(len(input_centroids)):
             if col not in assignments:
                 track_id = self._register(input_centroids[col])
                 detections[col]["track_id"] = track_id
-
         return detections
 
     def _register(self, centroid):
         obj_id = self.next_id
-        self.objects[obj_id] = centroid
-        self.disappeared[obj_id] = 0
-        self.positions[obj_id] = [(centroid, time.time())]
-        self.next_id += 1
+        self.objects[obj_id] = centroid; self.disappeared[obj_id] = 0
+        self.positions[obj_id] = [(centroid, time.time())]; self.next_id += 1
         return obj_id
 
     def _deregister(self, obj_id):
-        del self.objects[obj_id]
-        del self.disappeared[obj_id]
-        if obj_id in self.positions:
-            del self.positions[obj_id]
+        del self.objects[obj_id]; del self.disappeared[obj_id]
+        if obj_id in self.positions: del self.positions[obj_id]
 
     def get_velocity(self, track_id):
-        """Calculate displacement-based velocity of a tracked object (pixels/second)."""
-        if track_id not in self.positions or len(self.positions[track_id]) < 2:
-            return 0.0
+        if track_id not in self.positions or len(self.positions[track_id]) < 2: return 0.0
+        recent = self.positions[track_id][-10:]
+        if len(recent) < 2: return 0.0
+        dist = self._distance(recent[0][0], recent[-1][0])
+        dt = recent[-1][1] - recent[0][1]
+        return dist / dt if dt > 0.05 else 0.0
 
-        positions = self.positions[track_id]
-        # Use a larger window (10 frames) for smoother velocity estimation
-        recent = positions[-10:]
+    def get_stationary_time(self, track_id, threshold=15):
+        if track_id not in self.positions or len(self.positions[track_id]) < 2: return 0.0
+        pos, t = self.positions[track_id][-1]
+        stat_since = t
+        for p, pt in reversed(self.positions[track_id][:-1]):
+            if self._distance(pos, p) > threshold: break
+            stat_since = pt
+        return t - stat_since
 
-        if len(recent) < 2:
-            return 0.0
+class DeepSortTracker:
+    """
+    Elite DeepSort Multi-Object Tracker.
+    Uses appearance features (Re-ID) + Kalman Filter.
+    """
+    def __init__(self, max_age=30):
+        if DeepSort is None:
+            print("[TRACKER] ⚠️ DeepSort library not found. Falling back to SimpleTracker.")
+            self.internal = SimpleTracker(max_disappeared=max_age)
+            self.is_deepsort = False
+            self.positions = self.internal.positions  # Map simple tracker positions to parent structure
+        else:
+            self.tracker = DeepSort(max_age=max_age, n_init=3, nms_max_overlap=1.0, max_cosine_distance=0.2)
+            self.is_deepsort = True
+            # Shared memory for velocity/stationary logic
+            self.positions = defaultdict(list)
 
-        # Calculate displacement (direct distance from first to last point in window)
-        # This reduces noise from bounding box jitter
-        displacement = self._distance(recent[0][0], recent[-1][0])
-        time_diff = recent[-1][1] - recent[0][1]
+    def update(self, detections, frame):
+        if not self.is_deepsort: return self.internal.update(detections, frame)
+        if frame is None: return detections
 
-        if time_diff <= 0.05: # Guard against zero or near-zero time diff
-            return 0.0
+        # Convert detections to DeepSort format: [ [left, top, w, h], confidence, class_name ]
+        raw_detections = []
+        for d in detections:
+            x1, y1, x2, y2 = d["bbox"]
+            raw_detections.append(([x1, y1, x2 - x1, y2 - y1], d["confidence"], str(d["class"])))
 
-        return displacement / time_diff
+        tracks = self.tracker.update_tracks(raw_detections, frame=frame)
+        
+        tracked_detections = []
+        for track in tracks:
+            if not track.is_confirmed(): continue
+            track_id = int(track.track_id)
+            ltrb = track.to_ltrb() # Left, Top, Right, Bottom
+            center = [(ltrb[0] + ltrb[2]) / 2, (ltrb[1] + ltrb[3]) / 2]
+            
+            # Map back to original detection if possible to preserve keypoints/labels
+            best_match = None
+            min_dist = 50
+            for d in detections:
+                d_center = d["center"]
+                dist = math.sqrt((center[0]-d_center[0])**2 + (center[1]-d_center[1])**2)
+                if dist < min_dist:
+                    min_dist = dist
+                    best_match = d
+            
+            final_det = best_match.copy() if best_match else {
+                "bbox": ltrb.tolist(), "confidence": 1.0, "class": int(track.get_det_class() or 0),
+                "label": f"id_{track_id}", "is_weapon": False, "keypoints": None
+            }
+            final_det["track_id"] = track_id
+            final_det["center"] = center
+            
+            # Update telemetry history
+            self.positions[track_id].append((center, time.time()))
+            if len(self.positions[track_id]) > 100: self.positions[track_id] = self.positions[track_id][-100:]
+            tracked_detections.append(final_det)
 
-    def get_stationary_time(self, track_id, threshold_distance=15):
-        """Get how long an object has been stationary (seconds)."""
-        if track_id not in self.positions or len(self.positions[track_id]) < 2:
-            return 0.0
+        return tracked_detections
 
-        positions = self.positions[track_id]
-        current_pos = positions[-1][0]
-        current_time = positions[-1][1]
+    def get_velocity(self, track_id):
+        if track_id not in self.positions or len(self.positions[track_id]) < 2: return 0.0
+        p = self.positions[track_id]
+        recent = p[-10:] if len(p) >= 10 else p
+        dist = math.sqrt((recent[0][0][0]-recent[-1][0][0])**2 + (recent[0][0][1]-recent[-1][0][1])**2)
+        dt = recent[-1][1] - recent[0][1]
+        return dist / dt if dt > 0.05 else 0.0
 
-        stationary_since = current_time
-        for i in range(len(positions) - 2, -1, -1):
-            past_pos, past_time = positions[i]
-            if self._distance(current_pos, past_pos) > threshold_distance:
-                break
-            stationary_since = past_time
-
-        return current_time - stationary_since
-
+    def get_stationary_time(self, track_id, threshold=15):
+        if track_id not in self.positions or len(self.positions[track_id]) < 2: return 0.0
+        p_list = self.positions[track_id]
+        pos, t = p_list[-1]
+        stat_since = t
+        for p, pt in reversed(p_list[:-1]):
+            if math.sqrt((pos[0]-p[0])**2 + (pos[1]-p[1])**2) > threshold: break
+            stat_since = pt
+        return t - stat_since
 
 # Global tracker instances per camera
 _trackers = {}
 
-
-def get_tracker(camera_id: str) -> SimpleTracker:
-    """Get or create a tracker for a camera."""
+def get_tracker(camera_id: str):
+    """Get or create a tracker for a camera based on Config settings."""
+    from config import Config
     if camera_id not in _trackers:
-        _trackers[camera_id] = SimpleTracker()
+        if getattr(Config, 'TRACKER_TYPE', 'centroid') == 'deepsort':
+            _trackers[camera_id] = DeepSortTracker()
+        else:
+            _trackers[camera_id] = SimpleTracker()
     return _trackers[camera_id]
+
