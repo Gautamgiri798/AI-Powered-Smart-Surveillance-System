@@ -11,19 +11,11 @@ class Config:
 
     JWT_EXPIRATION_HOURS = int(os.environ.get("JWT_EXPIRATION_HOURS", 24))
 
-    # YOLO Global AI Engine (Security & Pose Optimized)
-    # Using yolov8s-pose for high-fidelity human activity & skeletal tracking
+    # YOLO Global AI Engine - UNLOCKED FULL SPECTRUM (COCO 0-79)
     YOLO_MODEL = os.environ.get("YOLO_MODEL", "yolov8s-pose_openvino_model")
     YOLO_CONFIDENCE = float(os.environ.get("YOLO_CONFIDENCE", 0.40))
-    # Curated AI Spectrum: Excludes problematic hallucination classes (cats, dogs, toothbrushes, tiny items) while retaining full indoor/outdoor awareness
-    DETECTION_CLASSES = [
-        0, 1, 2, 3, 5, 7, 9, 11, 13, # person, vehicles, street objects
-        24, 25, 26, 27, 28, # luggage/accessories
-        39, 41, 43, # bottle, cup, knife
-        56, 57, 58, 59, 60, # indoor furniture
-        62, 63, 66, 67, 73, 74, 76 # tech, tools, clock(smartwatch), books
-    ]
-    WEAPON_CLASSES = [43, 76]  # knife, scissors
+    DETECTION_CLASSES = list(range(80))
+    WEAPON_CLASSES = [43, 76, 34]  # Knife, Scissors, Baseball Bat (COCO proxies)
     TRACKER_TYPE = "deepsort"   # Options: "centroid", "deepsort"
 
     # High-Performance Kinetic Streaming Protocols
