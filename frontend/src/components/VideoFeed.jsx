@@ -102,7 +102,7 @@ export default function VideoFeed({
       )}
 
       {/* Forensic Monitoring View */}
-      <div className="video-view-wrapper" style={{ height: showFullscreen ? '100%' : '220px', background: '#020617', position: 'relative', flex: 1, overflow: 'hidden' }}>
+      <div className="video-view-wrapper" style={{ minHeight: showFullscreen ? '100%' : '340px', background: '#020617', position: 'relative', flex: 1, overflow: 'hidden' }}>
         {displayFrame ? (
           <>
             <img 
@@ -146,22 +146,28 @@ export default function VideoFeed({
           </>
         ) : (
           <div className="forensic-placeholder" style={{ 
-            display: 'flex', flexDirection: 'column', alignItems: 'center', 
-            justifyContent: 'center', width: '100%', height: '100%',
-            background: 'radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, transparent 100%)'
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            width: '100%', 
+            height: '100%',
+            background: 'radial-gradient(circle at center, rgba(15, 23, 42, 0.45) 0%, transparent 100%)',
+            position: 'absolute',
+            inset: 0
           }}>
-            <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
               <div style={{ 
-                width: 60, height: 60, borderRadius: '20px', background: 'rgba(59, 130, 246, 0.05)', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
-                border: '1px solid rgba(59, 130, 246, 0.2)', boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)'
+                width: 80, height: 80, borderRadius: '24px', background: 'rgba(59, 130, 246, 0.05)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(59, 130, 246, 0.15)', boxShadow: '0 0 30px rgba(59, 130, 246, 0.05)'
               }}>
-                <Camera size={28} color="rgba(59, 130, 246, 0.4)" strokeWidth={1.5} />
+                <Camera size={32} color="rgba(59, 130, 246, 0.3)" strokeWidth={1.5} />
               </div>
               <div style={{ 
-                fontSize: '0.6rem', fontWeight: 900, letterSpacing: '0.5em', 
-                textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)',
-                fontFamily: 'var(--font-heading)'
+                fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.4em', 
+                textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)',
+                fontFamily: 'var(--font-heading)', textAlign: 'center'
               }}>
                 Standby Protocol
               </div>

@@ -128,6 +128,17 @@ def user_exists(username):
     return row is not None
 
 
+def update_user_password(username, new_password_hash):
+    """Update user password. Returns True on success."""
+    conn = get_conn()
+    cur = conn.execute(
+        "UPDATE users SET password_hash = ? WHERE username = ?",
+        (new_password_hash, username)
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+
 # ═══════════════════════════════════════════
 #  CAMERA helpers
 # ═══════════════════════════════════════════

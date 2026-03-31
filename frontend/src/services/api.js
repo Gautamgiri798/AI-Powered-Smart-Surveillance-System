@@ -39,6 +39,18 @@ export const login = (username, password) =>
     body: JSON.stringify({ username, password }),
   });
 
+export const signup = (userData) =>
+  request('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+
+export const resetPassword = (data) =>
+  request('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
 export const getMe = () => request('/auth/me');
 
 // Cameras

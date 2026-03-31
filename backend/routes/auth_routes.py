@@ -46,6 +46,28 @@ def login():
     })
 
 
+@auth_bp.route("/api/auth/signup", methods=["POST"])
+def signup():
+    """Sign up a new user (public)."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    username = data.get("username")
+    password = data.get("password")
+    full_name = data.get("full_name", "")
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    if user_exists(username):
+        return jsonify({"error": "Username already exists"}), 409
+
+    create_user(username, hash_password(password), "viewer", full_name)
+
+    return jsonify({"message": f"User '{username}' registered successfully"}), 201
+
+
 @auth_bp.route("/api/auth/register", methods=["POST"])
 @token_required
 def register(current_user):
@@ -68,6 +90,34 @@ def register(current_user):
     create_user(username, hash_password(password), role, full_name)
 
     return jsonify({"message": f"User '{username}' created successfully"}), 201
+
+
+@auth_bp.route("/api/auth/reset-password", methods=["POST"])
+def reset_password():
+    """Reset user password (requires username and full_name match)."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    username = data.get("username")
+    full_name = data.get("full_name")
+    new_password = data.get("new_password")
+
+    if not username or not full_name or not new_password:
+        return jsonify({"error": "Username, Full Name, and New Password required"}), 400
+
+    user = get_user_by_username(username)
+    if not user:
+        return jsonify({"error": "Identity verification failed"}), 401
+
+    # Security check: Match full name (case insensitive)
+    if user.get("full_name", "").lower() != full_name.lower():
+        return jsonify({"error": "Identity verification failed"}), 401
+
+    from models.db import update_user_password
+    update_user_password(username, hash_password(new_password))
+
+    return jsonify({"message": "MISSION_RECOVERY_SUCCESS // Password has been updated."}), 200
 
 
 @auth_bp.route("/api/auth/me", methods=["GET"])

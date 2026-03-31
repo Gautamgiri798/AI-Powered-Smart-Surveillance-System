@@ -142,10 +142,10 @@ export default function App() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, gridColumn: 'span 2' }}>
-                  <label style={{ fontSiz: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Database size={12} /> MongoDB Intelligence URI
+                  <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Database size={12} /> SQLite3 Intelligence Path
                   </label>
-                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem', width: '100%' }} type="text" defaultValue="mongodb://localhost:27017/" />
+                  <input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: '0.9rem', width: '100%', fontFamily: 'var(--font-mono)' }} type="text" defaultValue="backend/safetysnap.db" />
                 </div>
 
                 <div style={{ gridColumn: 'span 2', marginTop: 12 }}>

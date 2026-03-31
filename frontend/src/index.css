@@ -23,8 +23,26 @@
 /* Strategic Layout Tuning */
 .tactical-layout {
   display: grid;
-  grid-template-columns: 1fr 400px; /* Slightly wider intel column */
+  grid-template-columns: 1fr 340px; /* Slimmer intel column for massive video area */
   gap: 32px;
+  align-items: flex-start;
+}
+
+.page-content { flex: 1; padding: 32px 40px; overflow-y: auto; }
+
+.video-section {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.camera-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important; /* Force linear side-by-side */
+  gap: 24px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-bottom: 20px !important;
 }
 
 .intelligence-column {

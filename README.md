@@ -1,89 +1,111 @@
-# 🛡️ SENTINEL VISION V8.4.5 — Universal Intelligence Suite
-## Full-Spectrum Human Action Recognition (HAR) & Forensic Threat Intelligence
+# <div align="center">🛡️ SENTINEL VISION — ELITE AI INTELLIGENCE 🛡️</div>
+## <div align="center">Next-Gen Multimodal Action Recognition & Forensic Detection Ecosystem</div>
 
-![Sentinel Vision Hero](file:///C:/Users/gauta/.gemini/antigravity/brain/3bc25aeb-8c36-41ee-919a-86b6682d0e2e/sentinel_vision_hero_1774869711674.png)
+<div align="center">
 
-**Sentinel Vision** is a professional-grade AI surveillance ecosystem engineered for high-fidelity investigative awareness. It utilizes a **Universal Vision Core** capable of identifying 80+ object classes and a **High-Frequency Pose Pipeline** for millisecond-grade human action recognition.
+![Version](https://img.shields.io/badge/Version-8.5.3--ELITE-blue?style=for-the-badge&logo=shield)
+![AI-Core](https://img.shields.io/badge/AI--Core-YOLOv8--OpenVINO-emerald?style=for-the-badge&logo=intel)
+![Database](https://img.shields.io/badge/Intelligence-SQLite3--WAL-orange?style=for-the-badge&logo=sqlite)
+![Interface](https://img.shields.io/badge/Dashboard-React--Vite-cyan?style=for-the-badge&logo=react)
 
----
-
-### 🚀 Mission-Critical AI Architecture
-The system is powered by a multi-threaded, asynchronous engine optimized for **OpenVINO CPU acceleration**, delivering **12Hz throughput (~80ms latency)** on edge hardware.
-
-#### 🧠 Continuous Inference Pipeline
-*   **Universal Spectrum (`YOLOv8s`)**: Unlocked to monitor all 80 COCO classes—from vehicles and animals to household tools—ensuring 100% environmental awareness.
-*   **Skeletal Pose Engine (`YOLOv8s-Pose`)**: Tracks 17 human keypoints in real-time, enabling the system to "read" human posture, gestures, and kinetic intent frame-by-frame.
-*   **Sentry-LSTM Memory (V3)**: A temporal analysis window that distinguishes between stationary states (Sitting/Standing) and complex behaviors (Pacing/Falling/Waving).
+</div>
 
 ---
 
-### 📊 Tactical Behavioral Matrix (HAR Classifier)
-Our proprietary **Human Action Recognition** engine groups live telemetry into 8 investigative divisions:
+### 🌐 **STRATEGIC OVERVIEW**
+**Sentinel Vision** is an ultra-premium, industrial-grade AI surveillance infrastructure engineered for autonomous situational awareness. By fusing **Universal Object Detection**, **Real-time Skeletal Pose Analysis**, and **Deep Temporal Memory**, the system transforms raw video into actionable forensic intelligence with millisecond precision.
 
-| Category | Real-Time Identifiers | Logic Triggers |
+Designed for high-security environments, the engine is optimized for **Intel OpenVINO CPU acceleration**, delivering stable, low-latency performance on edge hardware without requiring dedicated enterprise GPUs.
+
+---
+
+### 🧠 **THE AI INTELLIGENCE STACK**
+Our inference pipeline utilizes a sophisticated **Dual-Path Neural Architecture** for 360° environment monitoring:
+
+*   **🔍 UNIVERSAL SPECTRUM (`YOLOv8s`)**: Monitors 80 COCO classes—including vehicles, tools, and tactical proxies like weapons and mobile devices.
+*   **🦴 HIGH-FIDELITY POSE (`POSE-V2`)**: Tracks 17 human keypoints in real-time, translating posture into kinetic coordinate telemetry.
+*   **⏳ TEMPORAL MEMORY SUITE**: A 30-frame analysis window that recognizes complex behavioral sequences (e.g., distinguishing a sit-down from a medical fall).
+*   **🗣️ NLU NARRATIVE ENGINE**: Automatically translates mathematical vectors into descriptive tactical briefs for mission operators.
+
+---
+
+### 📊 **TACTICAL BEHAVIORAL MATRIX (HAR)**
+The HAR engine groups live telemetry into **8 high-precision investigate categories**:
+
+| | Category | Real-Time Identifiers | Kinetic Logic Triggers |
+| :--- | :--- | :--- | :--- |
+| **🟢** | **NOMINAL** | Standing, Sitting, Walking | Skeletal ratios & CoG stabilization |
+| **⚡** | **VELOCITY** | Running, Sudden Stops | Delta coordinate velocity Δ/ms |
+| **🛡️** | **ARMED** | Weapon Proxy Detection | Object-to-Hand proximity clustering |
+| **🚧** | **INTRUSION** | Zone Breach, Tripwires | Y-Coordinate intersection (0.85 line) |
+| **🆘** | **DISTRESS** | Fall Detection, Waving | Vertical compression & oscillation |
+| **🥊** | **AGRESSION** | Physical Fights, Density | ID Proximity vectors & Trajectory overlap |
+| **📱** | **CONTEXTUAL** | Smartphone Usage | Class 67 (Phone) inside Person BBox |
+| **👤** | **SHADOWING** | Suspicious Following | Persistent cross-ID trajectory correlation |
+
+---
+
+### 💎 **TACTICAL DASHBOARD FEATURES**
+The Sentinel Dashboard is a unified command-and-control center featuring 7 specialized modules:
+
+- [x] **📊 Strategic Status Cards**: Real-time visualization of Node Health, Alert Velocity, and System Load.
+- [x] **🚨 Live Alert Intelligence**: A prioritized, millisecond-synced threat streaming panel with forensic metadata.
+- [x] **🧠 LIVE Dual-Monitor Viewport**: Linear viewport with **AR Overlays** mapping skeletal pose and persistent IDs.
+- [x] **🎞️ Forensic V-Lab**: Deep-scan utility for uploading and analyzing mission clips offline.
+- [x] **📂 Log Event Registry**: High-speed database for searching, filtering, and exporting forensic evidence.
+- [x] **⚙️ System Protocol Interface**: Real-time calibration of Detection Confidence, FPS Limits, and Mission Paths.
+- [x] **🔐 Adaptive Auth Hub**: Glassmorphic multi-role portal featuring **Signup** and **Identity Recovery** modes.
+
+---
+
+### 🛠️ **STRATEGIC TECHNICAL STACK**
+
+| Domain | Technology Platform | Functional Role |
 | :--- | :--- | :--- |
-| **📉 BASIC** | 🚶 Standing, 🪑 Sitting, 🚶 Walking | Skeletal ratios & Kinetic gravity |
-| **⚡ MOVEMENT** | 🏃 Running, 🛑 Sudden Stop, ⚠️ High Velocity | Velocity Δ & Deceleration spikes |
-| **🕐 TIME-BASED** | 🕐 Loitering, 💤 Idle, 👤 Stationary | >30s Stationary Track_ID |
-| **🚧 ZONE-BASED** | ⛔ Intrusion, 🚧 Tripwire/Line Crossing | Y-Level (0.85) Tripwire Breach |
-| **🔪 SUSPICIOUS** | 🔪 Weapon Use, 🎒 Abandoned Object | BBox clustering & Attendance checks |
-| **🥊 INTERACTION** | 🥊 Fight, 👥 Crowd Density, 🚶‍♂️ FOLLOWING | Proximity vectors & Trajectory lag |
-| **🏋️ POSE_BASED** | 🚨 Fall, 👋 Waving, 🚨 Distress (Panic) | Skeletal compression & Oscillation |
-| **📱 CONTEXTUAL** | 📱 Smartphone Usage, 🌙 Night Activity | Object-Match (Class 67) & 22:00-05:00 |
+| **Vision Core** | OpenCV 4.8 + CLAHE | High-Fidelity Signal Processing |
+| **AI Inference** | YOLOv8 (OpenVINO) | Universal Neural Dual-Pass Engine |
+| **Persistence** | SQLite3 (WAL-Mode) | High-Frequency Telemetry Persistence |
+| **Logic Layer** | Python 3.10 (Async IO) | Multithreaded Behavior & NLP Loops |
+| **Interface** | React 18 + Vite | Low-Latency Strategic Dashboard |
+| **Sync Protocol** | Socket.IO / WebSockets | <30ms Video-to-Telemetry Sync |
 
 ---
 
-### 🛠️ Hardware & Full Tech Stack
+### 🚀 **RAPID DEPLOYMENT PROTOCOL**
 
-**Backend Mission Infrastructure:**
-- **Language:** Python 3.10.12+ 🐍
-- **Vision Core:** OpenCV 4.8+ with **CLAHE** (Image Enhancement) pre-processing.
-- **AI Backend:** Ultralytics YOLOv8 (OpenVINO optimized for CPU).
-- **Asynchronous Loop:** Multi-threaded `VideoService` with discrete worker threads (Detection, NLP, IO).
-- **Database:** SQLite3 with **WAL (Write-Ahead Logging)** mode for high-frequency logs.
-- **Security:** RSA/JWT-based authentication (24h token rotation).
+#### 1️⃣ **MISSION INITIALIZATION**
+```bash
+git clone https://github.com/Gautamgiri798/AI-Powered-Smart-Surveillance-System.git
+cd AI-Powered-Smart-Surveillance-System
+```
 
-**Tactical Interface (UI/UX):**
-- **Framework:** React 18 with high-speed Vite HMR.
-- **Communications:** Socket.IO for **<30ms video-event syncing**.
-- **Aesthetic:** Custom Glassmorphic CSS Engine with Dark-Mode optimization.
-- **Dashboards:** Dynamic Activity Matrix, Real-time Scene Intelligence, Tactical Feed.
+#### 2️⃣ **INTELLIGENCE CORE ACTIVATION (Port 5000)**
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
 
----
-
-### 🔎 Special Forensic Protocols
-*   **Armed Subject Detection:** The AI identifies objects classically used as weapons (Knives, Scissors, Bats) and links them to the person's track-id.
-*   **Smartphone Usage Detection:** Direct object-to-human linking (Object class 67 inside Person bbox 0) for identifying mobile distractions.
-*   **Suspicious Following Engine:** Compares trajectory correlation between multiple IDs to detect "Shadowing" or "Stalking".
-*   **NLP Forensic Briefing:** Multimodal AI translates raw telemetry into tactical briefs: *"Subject ID 4 exhibiting erratic movement near Restricted Zone."*
-
----
-
-### 📂 Full Project Architecture
-
-```text
-SENTINEL-VISION/
-├── backend/
-│   ├── app.py                  # API Boundary & Socket Gateway
-│   ├── config.py               # Mission Parameters (80 class spectrum, Tripwires)
-│   ├── services/
-│   │   ├── detection_service.py# [AI] Universal Dual-Pass Inference
-│   │   ├── behavior_service.py # [Logic] Interaction & Object Metrics
-│   │   ├── sequence_service.py # [LSTM] Temporal Analysis (Falls, Pacing)
-│   │   ├── tracking_service.py # [Tracking] Persistent ID Vectors
-│   │   ├── video_service.py    # [Engine] Asynchronous Feed Management
-│   │   └── nlp_service.py      # [Intel] Scene Briefing Narrative
-│   └── models/                 # AI Model Registries (OpenVINO + PT)
-├── frontend/
-│   ├── src/
-│   │   ├── components/         # ActivityMatrix, AlertPanel, VideoFeed
-│   │   └── hooks/              # useSocket telemetry hook
-└── reports/                    # Forensic Forensic Evidence logs
+#### 3️⃣ **DASHBOARD DASHBOARD DEPLOYMENT (Port 3000)**
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
+### 🗝️ **DOCUMENTATION ROADMAP**
+This guide is modularly structured to facilitate rapid onboarding across four domains:
+1.  **🛡️ Strategic Overview**: High-level system positioning and mission objectives.
+2.  **🧠 AI Stack**: Deep-dive into Neural inference and Temporal memory logic.
+3.  **📊 HAR Logic**: Forensic guidance on behavioral classification triggers.
+4.  **💎 Feature Modules**: Navigational aid for the Command & Control interface tools.
+5.  **🛠️ Stack & Deploy**: Hardware requirements and port-specific launch protocols.
+
+---
+
 <div align="center">
-  <sub>Developed for the Comprehensive Seminar on AI-Powered Smart Surveillance.</sub><br/>
-  <strong>🛡️ MISSION_SECURE // BIO_METRIC_ENGINE_NOMINAL // V8.4.5_FINAL</strong>
+  <strong>🛡️ MISSION_SECURE // V8.5.3_PRO_RELEASE // ELITE_INTEL_SYSTEM</strong><br/>
+  <sub>Sentinel Vision — Safeguarding mission-critical environments through Autonomous Intelligence.</sub>
 </div>
