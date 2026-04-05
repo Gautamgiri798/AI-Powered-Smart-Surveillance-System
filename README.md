@@ -51,6 +51,61 @@
 
 ---
 
+## 🏛️ System Architecture
+
+Sentinel utilizes a bifurcated architecture where a heavyweight **Python/C++ AI Engine** operates entirely independently from the **React UI**. They communicate over a bidirectional WebSocket bridge, ensuring the UI remains ultra-responsive regardless of CPU inference loads.
+
+```mermaid
+graph TD
+    A[Hardware Cameras] -->|RTSP/DSHOW| B(OpenCV Ingestion)
+    B --> C{AI Core Engine}
+    C -->|YOLOv8 Detection| D[Object/Weapon Locator]
+    C -->|YOLOv8-Pose| E[Behavioral Analysis]
+    D --> F[Matrix Merging]
+    E --> F
+    F -->|Throttling & Filters| G(Alert Router)
+    G --> H[(SQLite3 DB)]
+    G -->|JSON Payload| I[Flask SocketIO]
+    I <-->|WebSocket Stream| J(React Frontend Dashboard)
+```
+
+## 🏗️ Project Structure
+
+The repository is modularly split to ensure strict separation of concerns between computer vision processing and frontend interface state management:
+
+```text
+├── backend/                  # AI Inference & Data Server
+│   ├── models/               # Database schemas and SQLite wrappers
+│   ├── routes/               # REST API endpoints (Auth, Camera config)
+│   ├── services/             # Core Logic (Video, Behaviors, Tracking)
+│   ├── utils/                # Keypoint mappers and frame encoders
+│   ├── app.py                # Flask entry point and Socket dispatcher
+│   └── requirements.txt      # Python dependencies
+│
+└── frontend/                 # Client Interface Web App
+    ├── src/
+    │   ├── components/       # UI Widgets (VideoFeed, Grid, EventLog)
+    │   ├── hooks/            # useSocket dynamic payload bindings
+    │   ├── services/         # API wrappers mapping to the backend
+    │   ├── App.jsx           # Global state orchestrator
+    │   └── index.css         # Tactical Cyber-aesthetic styling
+    ├── package.json          # Node.js dependencies
+    └── vite.config.js        # Build configurations
+```
+
+## 🛤️ Internal Processing Pipelines
+
+1. **Ingestion Pipeline:** 
+   Cameras trigger isolated threading protocols `cv2.VideoCapture` inside `video_service.py`. Raw feeds are extracted and buffered to avoid backpressure.
+   
+2. **Inference Pipeline:**
+   Buffered frames hit `OpenVINO` optimized YOLOv8s and YOLOv8-Pose nodes. Entities are mapped with overlapping coordinate extraction to trace exactly who is doing what (e.g., verifying if a knife bounding box sits within a human keypoint box).
+   
+3. **Event Generation Pipeline:**
+   The `behavior_service.py` filters raw frames against elapsed time counters. If an anomaly persists (e.g., *Loitering > 30s*), it escalates the payload to the `alert_service.py` to bake into disk arrays and broadcast visually to connected users.
+
+---
+
 ## 🚀 Deployment Protocols
 
 ### Prerequisites
