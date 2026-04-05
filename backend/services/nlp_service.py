@@ -34,27 +34,29 @@ class SceneUnderstandingService:
             summary_parts.append(f"CRITICAL: {', '.join(threats)} identified within active perimeter.")
 
         for b in behaviors:
-            b_type = b["type"]
-            if b_type in ["fall_detected", "sustained_fall"]:
-                summary_parts.append("A potential medical emergency (individual down) is detected.")
+            b_type = b.get("type")
+            tid = b.get("track_id", "SYS")
+            
+            if b_type == "phoning":
+                summary_parts.append(f"📱 Subject {tid} is actively using a mobile phone.")
+            elif b_type == "dancing":
+                summary_parts.append(f"💃 Subject {tid} is exhibiting erratic/rhythmic physical motion (Dancing).")
+            elif b_type == "sleeping":
+                summary_parts.append(f"💤 Subject {tid} appears stationary in a reclined/seated posture (Potential Sleep).")
+            elif b_type == "running":
+                summary_parts.append(f"🏃 Subject {tid} is moving at high velocity.")
+            elif b_type == "sitting":
+                summary_parts.append(f"🪑 Subject {tid} has assumed a seated posture.")
+            elif b_type == "standing":
+                summary_parts.append(f"🧍 Subject {tid} is in a vertical standing posture.")
+            elif b_type in ["fall_detected", "sustained_fall"]:
+                summary_parts.append(f"🚑 medical emergency: Subject {tid} is detected down.")
             elif b_type == "intrusion":
-                summary_parts.append("Unauthorized breach of the restricted security zone recorded.")
-            elif b_type == "fight_detected":
-                summary_parts.append("🥊 CRITICAL: Violent physical conflict/fighting detected between subjects.")
-            elif b_type == "waving":
-                summary_parts.append("Subject is actively waving hands, signalling the camera.")
-            elif b_type == "hands_on_head":
-                summary_parts.append("Subject is exhibiting distress/panic posture (hands on head).")
-            elif b_type == "phoning":
-                summary_parts.append("Subject is currently using a mobile phone.")
-            elif b_type == "crouching":
-                summary_parts.append("Subject is detected in a suspicious/crouched posture.")
-            elif b_type == "rapid_approach":
-                summary_parts.append("⚠️ Subject is rapidly advancing directly towards the camera lens.")
+                summary_parts.append(f"⛔ Unauthorized access detected by Target {tid}.")
             elif b_type == "abandoned_object":
-                summary_parts.append("📦 A package/bag has been left unattended in a high-security area.")
+                summary_parts.append("📦 A suspicious package has been left unattended.")
 
-        summary = " ".join(summary_parts) if summary_parts else "Routine movement detected in surveillance area."
+        summary = " ".join(summary_parts) if summary_parts else "Observation post clear. Operational parameters nominal."
 
         # --- Multimodal Advisory (The NLP 'Voice') ---
         advisories = []

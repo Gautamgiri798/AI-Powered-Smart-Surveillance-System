@@ -17,16 +17,29 @@ async function request(endpoint, options = {}) {
   };
 
   const response = await fetch(url, { ...options, headers });
-  const data = await response.json();
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (e) {
+    // Response body was empty or not JSON
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Token is invalid/expired - force logout
+      const hadToken = localStorage.getItem('sentinel_token');
       localStorage.removeItem('sentinel_token');
       localStorage.removeItem('sentinel_user');
-      window.location.reload();
+      // Only reload if there was actually a session to expire
+      // Otherwise we'd loop forever on the login page
+      if (hadToken) {
+        window.location.reload();
+        return;
+      }
     }
-    throw new Error(data.error || 'Request failed');
+    throw new Error(data?.error || 'Request failed');
   }
 
   return data;

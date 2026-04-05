@@ -15,20 +15,19 @@ export default function useSocket() {
   const [liveBehaviors, setLiveBehaviors] = useState({});
 
   useEffect(() => {
-    // Robust backend URL detection
-    const hostname = window.location.hostname || 'localhost';
-    const backendUrl = (hostname === 'localhost' || hostname === '127.0.0.1')
-      ? `${window.location.protocol}//${hostname}:5000`
+    const token = localStorage.getItem('sentinel_token');
+    
+    // Absolute strategic fallback for Windows environments
+    const backendUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://127.0.0.1:5000'
       : window.location.origin;
 
-    console.log(`[WS] Connecting to: ${backendUrl}`);
-    
-    // Synchronize token name with App.jsx security protocol
-    const token = localStorage.getItem('sentinel_token');
-
+    console.info(`[WS] Establishing Strategic Bridge on ${backendUrl}`);
     const socket = io(backendUrl, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
+      transports: ['polling', 'websocket'],
+      autoConnect: true,
+      reconnectionAttempts: 15,
+      reconnectionDelay: 2000,
       auth: { token }
     });
 
@@ -37,6 +36,17 @@ export default function useSocket() {
     socket.on('connect', () => {
       console.log('[WS] Connected to mission core');
       setConnected(true);
+      
+      // Fetch initial anomalies to bootstrap the mission dashboard
+      import('../services/api').then(({ getEvents }) => {
+        getEvents({ limit: 15 }).then(data => {
+          // Handle {events: [...], total: ...} response format
+          const events = data?.events || [];
+          if (Array.isArray(events)) {
+            setAlerts(events);
+          }
+        }).catch(err => console.error('[WS] Initial bootstrap failure:', err));
+      });
     });
 
     socket.on('disconnect', () => {
@@ -44,7 +54,12 @@ export default function useSocket() {
       setConnected(false);
     });
 
+    socket.on('connect_error', (err) => {
+      console.error('[WS] Mission bridge connection error:', err.message);
+    });
+
     socket.on('alert', (data) => {
+      console.info('[INTEL] Active Threat Detected:', data.event_type);
       setAlerts((prev) => [data, ...prev].slice(0, 100));
     });
 
@@ -77,6 +92,7 @@ export default function useSocket() {
 
     socket.on('scene_briefing', (data) => {
       if (data) {
+        console.info('[INTEL] Scene Intelligence Briefing Received');
         setSceneBriefings((prev) => ({
           ...prev,
           [data.camera_id]: data,
@@ -86,6 +102,7 @@ export default function useSocket() {
 
     socket.on('live_behaviors', (data) => {
       if (data) {
+        console.info('[INTEL] Live Behavioral Matrix Synchronized');
         setLiveBehaviors((prev) => ({
           ...prev,
           [data.camera_id]: data.behaviors,
@@ -114,9 +131,14 @@ export default function useSocket() {
     setAlerts([]);
   }, []);
 
+  const removeAlert = useCallback((id) => {
+    setAlerts(prev => prev.filter(a => (a.id || a.event_id) !== id));
+  }, []);
+
   return {
     connected,
     alerts,
+    setAlerts,
     frames,
     detectionUpdates,
     cameraStatuses,
@@ -125,5 +147,6 @@ export default function useSocket() {
     emitStartCamera,
     emitStopCamera,
     clearAlerts,
+    removeAlert,
   };
 }

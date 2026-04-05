@@ -1,111 +1,99 @@
-# <div align="center">🛡️ SENTINEL VISION — ELITE AI INTELLIGENCE 🛡️</div>
-## <div align="center">Next-Gen Multimodal Action Recognition & Forensic Detection Ecosystem</div>
-
 <div align="center">
+  <img src="https://img.shields.io/badge/SENTINEL-CORE_ENGINE_V8.4-0f172a?style=for-the-badge&logo=shield&logoColor=3b82f6" alt="Sentinel Core" />
+  <h1>🛡️ AI-Powered Smart Surveillance System</h1>
+  <p><strong>Next-Generation Multimodal Behavioral Intelligence & Threat Detection</strong></p>
 
-![Version](https://img.shields.io/badge/Version-8.5.3--ELITE-blue?style=for-the-badge&logo=shield)
-![AI-Core](https://img.shields.io/badge/AI--Core-YOLOv8--OpenVINO-emerald?style=for-the-badge&logo=intel)
-![Database](https://img.shields.io/badge/Intelligence-SQLite3--WAL-orange?style=for-the-badge&logo=sqlite)
-![Interface](https://img.shields.io/badge/Dashboard-React--Vite-cyan?style=for-the-badge&logo=react)
-
+  [![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)](#)
+  [![React](https://img.shields.io/badge/React-18+-61dafb?logo=react&logoColor=black)](#)
+  [![Vite](https://img.shields.io/badge/Vite-6.4+-646cff?logo=vite&logoColor=white)](#)
+  [![YOLOv8](https://img.shields.io/badge/YOLOv8-OpenVINO-ff7043?logo=openvino&logoColor=white)](#)
+  [![Flask](https://img.shields.io/badge/Flask%20SocketIO-Socket%20Eventing-black?logo=flask&logoColor=white)](#)
 </div>
 
 ---
 
-### 🌐 **STRATEGIC OVERVIEW**
-**Sentinel Vision** is an ultra-premium, industrial-grade AI surveillance infrastructure engineered for autonomous situational awareness. By fusing **Universal Object Detection**, **Real-time Skeletal Pose Analysis**, and **Deep Temporal Memory**, the system transforms raw video into actionable forensic intelligence with millisecond precision.
-
-Designed for high-security environments, the engine is optimized for **Intel OpenVINO CPU acceleration**, delivering stable, low-latency performance on edge hardware without requiring dedicated enterprise GPUs.
+## 📖 Mission Overview
+**Sentinel** is an enterprise-grade AI video analytics dashboard designed to process autonomous threat detection, real-time behavioral insights, and situational forensic monitoring across multi-camera setups. Engineered with the **YOLOv8 Object & Pose Models** running parallel via **OpenVINO Hardware Acceleration**, it provides rapid zero-latency inference for robust security deployments.
 
 ---
 
-### 🧠 **THE AI INTELLIGENCE STACK**
-Our inference pipeline utilizes a sophisticated **Dual-Path Neural Architecture** for 360° environment monitoring:
+## ⚡ Core Capabilities
 
-*   **🔍 UNIVERSAL SPECTRUM (`YOLOv8s`)**: Monitors 80 COCO classes—including vehicles, tools, and tactical proxies like weapons and mobile devices.
-*   **🦴 HIGH-FIDELITY POSE (`POSE-V2`)**: Tracks 17 human keypoints in real-time, translating posture into kinetic coordinate telemetry.
-*   **⏳ TEMPORAL MEMORY SUITE**: A 30-frame analysis window that recognizes complex behavioral sequences (e.g., distinguishing a sit-down from a medical fall).
-*   **🗣️ NLU NARRATIVE ENGINE**: Automatically translates mathematical vectors into descriptive tactical briefs for mission operators.
+### 1. 👁️ Tactical Object & Threat Detection
+* **Real-time Target Tracking:** Uses `yolov8s.pt` to autonomously classify and track entities. 
+* **Weapon Recognition Matrices:** Explicit configurations to identify threats holding sharp or blunt objects (e.g., Knives, Baseball Bats, Scissors).
+* **Multi-Camera Indexing:** Seamlessly bind virtual camera streams (e.g., iOS via Iriun Webcam) or hardware RTSP nodes directly to the dashboard GUI.
 
----
+### 2. 🏃 Behavioral Intelligence Analysis
+* **Granular Posture Assessment:** Utilizes `yolov8s-pose.pt` keypoints to precisely deduce subject states (`STANDING`, `SITTING`, `WALKING`, `RUNNING`).
+* **Complex Object Interaction:** Evaluates intersecting bounding boxes to determine situational actions (e.g., *Subject Holding Object*, *Subject Using Phone*).
+* **Anomalous Behavioral Triggers:** Dynamic loitering detection and fallen-person indicators (`POSTURE ANOMALY / PERSON DOWN`).
 
-### 📊 **TACTICAL BEHAVIORAL MATRIX (HAR)**
-The HAR engine groups live telemetry into **8 high-precision investigate categories**:
-
-| | Category | Real-Time Identifiers | Kinetic Logic Triggers |
-| :--- | :--- | :--- | :--- |
-| **🟢** | **NOMINAL** | Standing, Sitting, Walking | Skeletal ratios & CoG stabilization |
-| **⚡** | **VELOCITY** | Running, Sudden Stops | Delta coordinate velocity Δ/ms |
-| **🛡️** | **ARMED** | Weapon Proxy Detection | Object-to-Hand proximity clustering |
-| **🚧** | **INTRUSION** | Zone Breach, Tripwires | Y-Coordinate intersection (0.85 line) |
-| **🆘** | **DISTRESS** | Fall Detection, Waving | Vertical compression & oscillation |
-| **🥊** | **AGRESSION** | Physical Fights, Density | ID Proximity vectors & Trajectory overlap |
-| **📱** | **CONTEXTUAL** | Smartphone Usage | Class 67 (Phone) inside Person BBox |
-| **👤** | **SHADOWING** | Suspicious Following | Persistent cross-ID trajectory correlation |
+### 3. 📡 Mission Control Interface (Vite/React)
+* **High-Fidelity Dashboard:** React-driven terminal UI utilizing a sleek tactical cyber-aesthetic with live WebSocket telemetry.
+* **Granular Forensic Event Logs:** Local SQLite 3 backing allowing you to permanently filter, acknowledge, or purge historical records.
+* **NLP Intelligence Briefings:** An intelligent text parser that converts raw bounding box data into human-readable situational logs (e.g., *"1 Subject detected near right border holding a phone"*).
 
 ---
 
-### 💎 **TACTICAL DASHBOARD FEATURES**
-The Sentinel Dashboard is a unified command-and-control center featuring 7 specialized modules:
+## 🛠️ Technology Stack
 
-- [x] **📊 Strategic Status Cards**: Real-time visualization of Node Health, Alert Velocity, and System Load.
-- [x] **🚨 Live Alert Intelligence**: A prioritized, millisecond-synced threat streaming panel with forensic metadata.
-- [x] **🧠 LIVE Dual-Monitor Viewport**: Linear viewport with **AR Overlays** mapping skeletal pose and persistent IDs.
-- [x] **🎞️ Forensic V-Lab**: Deep-scan utility for uploading and analyzing mission clips offline.
-- [x] **📂 Log Event Registry**: High-speed database for searching, filtering, and exporting forensic evidence.
-- [x] **⚙️ System Protocol Interface**: Real-time calibration of Detection Confidence, FPS Limits, and Mission Paths.
-- [x] **🔐 Adaptive Auth Hub**: Glassmorphic multi-role portal featuring **Signup** and **Identity Recovery** modes.
+**Frontend (Client Node)**
+* Framework: `React 18` + `Vite`
+* Communication: `Socket.IO-Client`
+* UI Icons & Graphics: `Lucide React`
 
----
-
-### 🛠️ **STRATEGIC TECHNICAL STACK**
-
-| Domain | Technology Platform | Functional Role |
-| :--- | :--- | :--- |
-| **Vision Core** | OpenCV 4.8 + CLAHE | High-Fidelity Signal Processing |
-| **AI Inference** | YOLOv8 (OpenVINO) | Universal Neural Dual-Pass Engine |
-| **Persistence** | SQLite3 (WAL-Mode) | High-Frequency Telemetry Persistence |
-| **Logic Layer** | Python 3.10 (Async IO) | Multithreaded Behavior & NLP Loops |
-| **Interface** | React 18 + Vite | Low-Latency Strategic Dashboard |
-| **Sync Protocol** | Socket.IO / WebSockets | <30ms Video-to-Telemetry Sync |
+**Backend (AI Engine)**
+* Framework: `Flask` + `Flask-SocketIO`
+* Database: `SQLite3`
+* Computer Vision: `OpenCV` + `Ultralytics (YOLOv8)`
+* Acceleration: `Intel OpenVINO` Framework
 
 ---
 
-### 🚀 **RAPID DEPLOYMENT PROTOCOL**
+## 🚀 Deployment Protocols
 
-#### 1️⃣ **MISSION INITIALIZATION**
-```bash
-git clone https://github.com/Gautamgiri798/AI-Powered-Smart-Surveillance-System.git
-cd AI-Powered-Smart-Surveillance-System
-```
+### Prerequisites
+* Python 3.9+
+* Node.js v18+
+* Minimum 8GB RAM + Multi-core CPU (For OpenVINO execution)
 
-#### 2️⃣ **INTELLIGENCE CORE ACTIVATION (Port 5000)**
+### 1. Initialize the Core Engine (Backend)
+Navigate to the `backend` directory and install the necessary dependencies:
 ```bash
 cd backend
+python -m venv venv
+.\venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-python app.py
 ```
 
-#### 3️⃣ **DASHBOARD DASHBOARD DEPLOYMENT (Port 3000)**
+Launch the Application Server:
+```bash
+python app.py
+```
+*The database (`safetysnap.db`) will auto-initialize alongside the YOLO weights on your first run.*
+
+### 2. Initiate the Mission Dashboard (Frontend)
+Open a new terminal session, navigate to the `frontend` directory:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Navigate to `http://localhost:3000/` in your browser.
 
 ---
 
-### 🗝️ **DOCUMENTATION ROADMAP**
-This guide is modularly structured to facilitate rapid onboarding across four domains:
-1.  **🛡️ Strategic Overview**: High-level system positioning and mission objectives.
-2.  **🧠 AI Stack**: Deep-dive into Neural inference and Temporal memory logic.
-3.  **📊 HAR Logic**: Forensic guidance on behavioral classification triggers.
-4.  **💎 Feature Modules**: Navigational aid for the Command & Control interface tools.
-5.  **🛠️ Stack & Deploy**: Hardware requirements and port-specific launch protocols.
+## 🎮 Interface Controls
+
+1. **Dashboard Overview:** Monitor total events, active cameras, missing persons, and critical threats.
+2. **Camera Source Management:** Bind new feeds or toggle streams via the left-side `CAMERAS` tab.
+3. **Live Alert Logging:** The `ALERTS` and right-panel module captures behaviors to your permanent disk. Navigate to `EVENTS` to filter intel by severity thresholds.
+4. **Data Purging:** Administrative functionality available to hard-delete active SQLite forensic traces using `PURGE LOGS`.
 
 ---
 
-<div align="center">
-  <strong>🛡️ MISSION_SECURE // V8.5.3_PRO_RELEASE // ELITE_INTEL_SYSTEM</strong><br/>
-  <sub>Sentinel Vision — Safeguarding mission-critical environments through Autonomous Intelligence.</sub>
-</div>
+## 🚨 Troubleshooting & Diagnostics
+* **System Camera Conflicts:** If hooking external USB / Phone systems (Iriun Webcam) results in swapped views, utilize the explicit `swap_cams.py` or modify the camera array via the UI.
+* **Ports Blocked / Dashboard says System Offline:** Ensure there are no zombie Python background processes. Force quit Python `taskkill /F /IM python.exe` and reboot `app.py`.
+* **Zero Frame Emissions:** Verify no other application is seizing generic control over `/dev/video0` or `COM` port cameras causing `cv2.VideoCapture()` blackouts.

@@ -33,18 +33,74 @@ def get_pose_model():
     return _pose_model
 
 
+def _compute_iou(boxA, boxB):
+    """Compute Intersection over Union between two boxes [x1,y1,x2,y2]."""
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+    
+    inter = max(0, xB - xA) * max(0, yB - yA)
+    if inter == 0:
+        return 0.0
+    
+    areaA = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
+    areaB = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
+    
+    return inter / (areaA + areaB - inter)
+
+
+def _nms_per_class(detections, iou_threshold=0.45):
+    """
+    Apply Non-Maximum Suppression per class to remove duplicate detections.
+    This is critical for preventing the same person being detected twice.
+    """
+    if len(detections) <= 1:
+        return detections
+    
+    # Group by class
+    by_class = {}
+    for d in detections:
+        cls = d["class"]
+        if cls not in by_class:
+            by_class[cls] = []
+        by_class[cls].append(d)
+    
+    result = []
+    for cls, dets in by_class.items():
+        # Sort by confidence, highest first
+        dets.sort(key=lambda x: x["confidence"], reverse=True)
+        
+        keep = []
+        while dets:
+            best = dets.pop(0)
+            keep.append(best)
+            
+            # Remove detections that overlap too much with the best one
+            remaining = []
+            for d in dets:
+                if _compute_iou(best["bbox"], d["bbox"]) < iou_threshold:
+                    remaining.append(d)
+            dets = remaining
+        
+        result.extend(keep)
+    
+    return result
+
+
 def detect_objects(frame):
     """
-    Advanced Dual-Engine AI Pipeline.
-    1. Runs Generic Detection (Weapons, Luggage, Seats, etc.)
-    2. Runs Pose Estimation (Skeletal actions, Waving, Posture)
+    Dual-Engine AI Pipeline with strict NMS to prevent duplicate detections.
+    1. Runs Generic Detection (Weapons, Objects, etc.)
+    2. Runs Pose Estimation (Skeletal actions, Posture)
+    3. Applies per-class NMS to remove overlapping duplicates
     """
     model = get_model()
     pose_model = get_pose_model()
     if model is None: return []
 
     try:
-        # Preprocessing: Apply milder CLAHE for clarity without noise-amplification
+        # Preprocessing: Apply mild CLAHE for clarity
         lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
@@ -52,10 +108,11 @@ def detect_objects(frame):
         enhanced_lab = cv2.merge((cl, a, b))
         enhanced_frame = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
 
-        # 1. Broad Environment Detection Pass
+        # 1. Detection Pass — higher confidence to reduce false positives
         results = model(
             enhanced_frame, 
-            conf=0.35,
+            conf=Config.YOLO_CONFIDENCE,  # Use config value (0.45)
+            iou=0.50,       # Stricter NMS within YOLO itself
             imgsz=640, 
             device='cpu', 
             verbose=False
@@ -71,7 +128,9 @@ def detect_objects(frame):
                     cls_int = int(cls)
 
                     if cls_int not in Config.DETECTION_CLASSES: continue
-                    threshold = 0.60 if cls_int in Config.WEAPON_CLASSES else Config.YOLO_CONFIDENCE
+                    
+                    # Higher threshold for weapon classes to reduce false positives
+                    threshold = 0.65 if cls_int in Config.WEAPON_CLASSES else Config.YOLO_CONFIDENCE
                     if conf < threshold: continue
 
                     label = model.names.get(cls_int, f"class_{cls_int}")
@@ -87,23 +146,23 @@ def detect_objects(frame):
                         "keypoints": None
                     })
 
-        # 2. Precision Pose Pass (Run Pose model on any detected person)
+        # 2. Apply strict NMS to eliminate duplicate detections of same person
+        detections = _nms_per_class(detections, iou_threshold=0.40)
+
+        # 3. Pose Pass — only if persons detected
         has_persons = any(d["class"] == 0 for d in detections)
         if has_persons and pose_model is not None:
-            # We run a single full-frame pose pass for efficiency (it tracks all people)
-            pose_results = pose_model(enhanced_frame, conf=0.4, verbose=False)
+            pose_results = pose_model(enhanced_frame, conf=0.45, imgsz=640, verbose=False)
             for pr in pose_results:
                 if pr.keypoints is not None:
-                    # Match poses to existing person detections by center distance
                     for pose_kp_tensor in pr.keypoints.data:
                         kp_list = pose_kp_tensor.tolist()
-                        # Calculate center of pose to match
                         valid_kp = [k for k in kp_list if k[2] > 0.3]
                         if not valid_kp: continue
                         pk_cx = sum(k[0] for k in valid_kp) / len(valid_kp)
                         pk_cy = sum(k[1] for k in valid_kp) / len(valid_kp)
                         
-                        # Match to the closest detected person
+                        # Match to closest detected person
                         best_person = None
                         min_dist = 60
                         for d in detections:
@@ -130,4 +189,3 @@ def get_detection_summary(detections):
         "weapons": weapons,
         "has_threat": weapons > 0
     }
-

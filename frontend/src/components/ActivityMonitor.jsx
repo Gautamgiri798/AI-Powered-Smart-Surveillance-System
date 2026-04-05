@@ -3,7 +3,7 @@ import { Activity } from 'lucide-react';
 export default function ActivityMonitor({ alerts = [], liveBehaviors = {} }) {
   // Detailed Category Mapping as requested
   const CATEGORIES = {
-    'BASIC': ['standing', 'walking', 'sitting'],
+    'BASIC': ['standing', 'walking', 'sitting', 'person_detected'],
     'MOVEMENT': ['running', 'aggressive_running', 'sudden_stop'],
     'TIME_BASED': ['loitering', 'idle'],
     'ZONE_BASED': ['intrusion', 'line_crossing'],

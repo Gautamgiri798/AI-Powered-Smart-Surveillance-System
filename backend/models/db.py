@@ -82,19 +82,17 @@ def init_db():
         conn.commit()
         print("[DB] 👤 Default admin user created (admin / admin123)")
 
-    # ── Seed primary cameras ──
-    # Re-mapped indices for the user's laptop: 0 is Integrated, 1 is Iriun
-    cur.execute("DELETE FROM cameras")
+    # ── Safe Seed primary cameras ──
     sample_cameras = [
-        ("cam_1", "System Camera", "Laptop Integrated", "0", "active", "usb"),
-        ("cam_2", "Iriun Webcam",  "Secondary Source",  "1", "active", "usb"),
+        ("cam_1", "System Camera", "Laptop Integrated", "1", "active", "usb"),
+        ("cam_2", "Iriun Webcam",  "Secondary Source",  "0", "active", "usb"),
     ]
     cur.executemany(
-        "INSERT INTO cameras (camera_id, name, location, rtsp_url, status, type) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO cameras (camera_id, name, location, rtsp_url, status, type) VALUES (?, ?, ?, ?, ?, ?)",
         sample_cameras
     )
     conn.commit()
-    print("[DB] 📷 Dual-Camera system initialized (System + USB)")
+    print("[DB] 📷 Mission registries synchronized.")
 
     print(f"[DB] ✅ SQLite3 database initialized — {Config.SQLITE_DB}")
 

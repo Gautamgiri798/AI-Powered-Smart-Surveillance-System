@@ -250,5 +250,10 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-backend/yolov8n.pt
+backend/models/
+backend/yolov8*.pt
+backend/yolov8*_openvino_model/
+backend/test_videos/
+backend/forensic_reports/
+backend/uploads/
 frontend/dist/

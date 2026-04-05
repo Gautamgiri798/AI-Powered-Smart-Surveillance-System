@@ -1,186 +1,259 @@
-"""Suspicious behavior analysis service."""
+"""Advanced Behavioral Intelligence Engine with temporal smoothing."""
+from collections import defaultdict
 from config import Config
 from services.tracking_service import get_tracker
 
+# ── Temporal smoothing: store recent activity labels per track ──
+_activity_history = defaultdict(list)  # track_id -> list of recent labels
+_HISTORY_LEN = 6  # number of frames to average over
+
+
+def _smooth_activity(track_id: int, raw_label: str) -> str:
+    """
+    Smooth activity classification over the last N frames.
+    Returns the most common label in the recent window.
+    This eliminates single-frame noise (e.g. one "sitting" frame 
+    while actually standing).
+    """
+    history = _activity_history[track_id]
+    history.append(raw_label)
+    if len(history) > _HISTORY_LEN:
+        _activity_history[track_id] = history[-_HISTORY_LEN:]
+        history = _activity_history[track_id]
+    
+    # Count occurrences and return the most frequent
+    counts = {}
+    for h in history:
+        counts[h] = counts.get(h, 0) + 1
+    return max(counts, key=counts.get)
+
+
+def _classify_posture_from_keypoints(keypoints, bbox_height):
+    """
+    Use pose keypoints to determine posture (STANDING, SITTING, LYING).
+    
+    Keypoint indices (COCO):
+      5=left_shoulder, 6=right_shoulder
+      11=left_hip, 12=right_hip
+      13=left_knee, 14=right_knee
+      15=left_ankle, 16=right_ankle
+    
+    Strategy:
+      - Compare vertical distances between body segments
+      - If hip-knee-ankle chain is mostly vertical -> STANDING
+      - If knees are close to hips vertically -> SITTING
+      - If shoulders are close to hips vertically -> LYING
+    """
+    if not keypoints or len(keypoints) < 17:
+        return None
+    
+    try:
+        l_shoulder, r_shoulder = keypoints[5], keypoints[6]
+        l_hip, r_hip = keypoints[11], keypoints[12]
+        l_knee, r_knee = keypoints[13], keypoints[14]
+        l_ankle, r_ankle = keypoints[15], keypoints[16]
+        
+        # Use keypoints with sufficient confidence (> 0.3)
+        def valid(kp): return kp[2] > 0.3
+        
+        # Try to get shoulder, hip, knee, ankle Y positions
+        # Average left and right if both are valid
+        shoulder_y = None
+        if valid(l_shoulder) and valid(r_shoulder):
+            shoulder_y = (l_shoulder[1] + r_shoulder[1]) / 2
+        elif valid(l_shoulder):
+            shoulder_y = l_shoulder[1]
+        elif valid(r_shoulder):
+            shoulder_y = r_shoulder[1]
+            
+        hip_y = None
+        if valid(l_hip) and valid(r_hip):
+            hip_y = (l_hip[1] + r_hip[1]) / 2
+        elif valid(l_hip):
+            hip_y = l_hip[1]
+        elif valid(r_hip):
+            hip_y = r_hip[1]
+            
+        knee_y = None
+        if valid(l_knee) and valid(r_knee):
+            knee_y = (l_knee[1] + r_knee[1]) / 2
+        elif valid(l_knee):
+            knee_y = l_knee[1]
+        elif valid(r_knee):
+            knee_y = r_knee[1]
+            
+        ankle_y = None
+        if valid(l_ankle) and valid(r_ankle):
+            ankle_y = (l_ankle[1] + r_ankle[1]) / 2
+        elif valid(l_ankle):
+            ankle_y = l_ankle[1]
+        elif valid(r_ankle):
+            ankle_y = r_ankle[1]
+
+        if shoulder_y is None or hip_y is None:
+            return None
+        
+        # Normalize distances by bbox height for camera-angle independence
+        torso_len = abs(hip_y - shoulder_y) / max(bbox_height, 1)
+        
+        # If we have knee data: check hip-to-knee vs knee-to-ankle ratios
+        if knee_y is not None:
+            hip_knee_dist = abs(knee_y - hip_y) / max(bbox_height, 1)
+            
+            # SITTING: knees are very close to hips vertically (legs bent)
+            # Typical sitting: hip_knee_dist < 0.10 (legs folded under/forward)
+            if hip_knee_dist < 0.10:
+                return "SITTING"
+            
+            # STANDING: hip-to-knee takes a good fraction of body height
+            # and torso is roughly vertical
+            if hip_knee_dist > 0.15 and torso_len > 0.15:
+                return "STANDING"
+        
+        # Fallback: if torso is very short relative to bbox, likely lying/sitting
+        if torso_len < 0.12:
+            return "LYING"
+        
+        # If torso is a reasonable fraction, person is likely standing
+        if torso_len > 0.20:
+            return "STANDING"
+            
+        return None  # Uncertain
+        
+    except (IndexError, TypeError):
+        return None
+
 
 def analyze_behavior(camera_id: str, detections: list) -> list:
-    """
-    Advanced behavioral analysis suite for SentinelVision.
-    Provides Person, Weapon, Loitering, Running, Fall, Intrusion, and Crowd monitoring.
-    """
     tracker = get_tracker(camera_id)
     behaviors = []
+    status_map = {}
 
     persons = [d for d in detections if d.get("class") == 0]
     weapons = [d for d in detections if d.get("is_weapon")]
-    phones = [d for d in detections if d.get("class") == 67] # Cell phone
+    phones = [d for d in detections if d.get("class") == 67]
 
-    # 1. WEAPON THREATS (Priority 1)
+    # --- 1. CRITICAL THREATS (FIRST) ---
     if weapons:
-        for weapon in weapons:
-            severity = "critical" if persons else "high"
-            prefix = "⚠️ THREAT:" if persons else "🔪 WEAPON:"
+        for w in weapons:
             behaviors.append({
-                "type": "weapon_threat",
-                "severity": severity,
-                "description": f"{prefix} {weapon['label'].upper()} detected!",
-                "track_id": weapon.get("track_id")
+                "type": "weapon_threat", "severity": "critical", 
+                "description": f"⚠️ CRITICAL: {w['label'].upper()} detected!",
+                "track_id": w.get("track_id"), "confidence": w.get("confidence")
             })
 
-    # 2. PERSON-LEVEL BEHAVIORS
-    for person in persons:
-        track_id = person.get("track_id")
-        bbox = person.get("bbox") # [x1, y1, x2, y2]
-        center = person.get("center") # [cx, cy]
-        conf = person.get("confidence", 0.0)
+    # --- 2. DYNAMIC ACTIONS & POSTURES ---
+    for p in persons:
+        tid = p.get("track_id")
+        if tid is None: 
+            continue
+        bbox = p.get("bbox", [0, 0, 0, 0])
+        bw = max(1, bbox[2] - bbox[0])
+        bh = max(1, bbox[3] - bbox[1])
+        aspect = bw / bh
+        vel = tracker.get_velocity(tid)
+        stay_time = tracker.get_stationary_time(tid)
         
-        if not bbox or not center: continue
+        raw_status = "MONITORING"
         
-        # A. SMARTPHONE USAGE (Object-Context Matching)
-        for phone in phones:
-            p_c = phone.get("center")
-            if p_c and bbox[0] <= p_c[0] <= bbox[2] and bbox[1] <= p_c[1] <= bbox[3]:
-                behaviors.append({
-                    "type": "phoning",
-                    "severity": "info",
-                    "description": "📱 PHONING: Subject is actively using a cell phone.",
-                    "track_id": track_id,
-                    "confidence": max(conf, phone.get("confidence", 0))
-                })
-                break
-
-        if track_id is not None:
-            # C. Running Detection
-            velocity = tracker.get_velocity(track_id)
-            if velocity > Config.HIGH_VELOCITY_THRESHOLD:
-                behaviors.append({
-                    "type": "running",
-                    "severity": "medium",
-                    "description": f"🏃 RUNNING: Person (ID: {track_id}) moving at high velocity",
-                    "track_id": track_id,
-                    "confidence": conf
-                })
-
-            # D. Loitering Detection
-            stationary_time = tracker.get_stationary_time(track_id)
-            if stationary_time > Config.LOITERING_THRESHOLD_SEC:
-                behaviors.append({
-                    "type": "loitering",
-                    "severity": "low",
-                    "description": f"🕐 LOITERING: Person (ID: {track_id}) stationary for {stationary_time:.0f}s",
-                    "track_id": track_id,
-                    "confidence": conf
-                })
-
-            # --- SENTRY-LSTM: Advanced Temporal Sequence Analysis ---
-            from services.sequence_service import sentry_lstm
-            temporal_data = {
-                "track_id": track_id,
-                "bbox": bbox,
-                "center": center,
-                "velocity": velocity,
-                "confidence": conf,
-                "keypoints": person.get("keypoints")
-            }
-            temporal_anomalies = sentry_lstm.update_and_analyze(camera_id, track_id, temporal_data)
-            for anomaly in temporal_anomalies:
-                anomaly["track_id"] = track_id
-                anomaly["confidence"] = conf
-                behaviors.append(anomaly)
-
-    # CALL MULTI-SUBJECT ANALYSIS (Following, Tailgating)
-    if len(persons) >= 2:
-        from services.sequence_service import sentry_lstm
-        # Create map for easier analysis
-        p_map = {p["track_id"]: p for p in persons if p.get("track_id") is not None}
-        interaction_anomalies = sentry_lstm.analyze_multi_subject(camera_id, p_map)
-        for interaction in interaction_anomalies:
-            interaction["confidence"] = 0.85 # Heuristic confidence
-            behaviors.append(interaction)
-
-    # 3. CROWD DENSITY (Global)
-    p_count = len(persons)
-    if p_count >= Config.CROWD_DENSITY_LIMIT:
-        severity = "medium"
-        if p_count >= 10: severity = "high"
-        if p_count >= 20: severity = "critical"
+        # Object holding logic - check if any non-person object is inside this person's bounding box
+        held_objects = []
+        is_phoning = False
         
-        import numpy as np
-        avg_conf = np.mean([p.get("confidence", 0) for p in persons]) if persons else 0
+        for obj in detections:
+            # Skip persons
+            if obj.get("class") == 0:
+                continue
+                
+            oc = obj.get("center")
+            if oc and bbox[0] <= oc[0] <= bbox[2] and bbox[1] <= oc[1] <= bbox[3]:
+                # Object's center is inside person's bounding box -> they are holding it
+                item_label = obj.get("label", "item")
+                held_objects.append(item_label)
+                
+                if obj.get("class") == 67: # Phone class
+                    is_phoning = True
+        
+        # Report generalized holding behavior (excluding phone, handled below)
+        other_held = [o for o in held_objects if o.lower() != "cell phone"]
+        if other_held:
+            items_str = ", ".join(other_held)
+            behaviors.append({
+                "type": "holding_object", "severity": "info", "track_id": tid, 
+                "description": f"Subject {tid} is holding: {items_str}."
+            })
+            
+        if is_phoning:
+            raw_status = "USING_PHONE"
+            behaviors.append({
+                "type": "phoning", "severity": "medium", "track_id": tid, 
+                "description": f"📱 Subject {tid} is using a phone."
+            })
+        elif vel > Config.HIGH_VELOCITY_THRESHOLD:
+            # High velocity = running
+            raw_status = "RUNNING"
+            behaviors.append({
+                "type": "running", "severity": "medium", "track_id": tid, 
+                "description": f"🏃 Subject {tid} is running (speed: {vel:.0f})."
+            })
+        elif vel > Config.HIGH_VELOCITY_THRESHOLD * 0.3:
+            # Moderate velocity = walking (between 30-100% of run threshold)
+            raw_status = "WALKING"
+            behaviors.append({
+                "type": "walking", "severity": "info", "track_id": tid, 
+                "description": f"🚶 Subject {tid} is walking."
+            })
+        elif aspect > Config.FALL_THRESHOLD_RATIO and bh > 30:
+            # Very wide aspect ratio = person is horizontal (fallen)
+            raw_status = "POSTURE_ANOMALY"
+            behaviors.append({
+                "type": "posture_anomaly", "severity": "critical", "track_id": tid, 
+                "description": f"🚑 Subject {tid} may have fallen."
+            })
+        else:
+            # Determine posture from keypoints first, then fallback to aspect ratio
+            kp_posture = _classify_posture_from_keypoints(
+                p.get("keypoints"), bh
+            )
+            
+            if kp_posture:
+                raw_status = kp_posture
+            else:
+                # Aspect ratio fallback (less reliable)
+                # Standing people are taller than wide (aspect < 0.7)
+                # Sitting people are wider relative to height (aspect > 0.7)
+                if aspect > 0.75:
+                    raw_status = "SITTING"
+                else:
+                    raw_status = "STANDING"
+            
+            # Apply temporal smoothing to eliminate frame-to-frame noise
+            smoothed_status = _smooth_activity(tid, raw_status)
+            raw_status = smoothed_status
+            
+            behaviors.append({
+                "type": raw_status.lower(), "severity": "info", "track_id": tid, 
+                "description": f"Subject {tid} is {raw_status}."
+            })
+
+        # Loitering checks
+        if stay_time > Config.LOITERING_THRESHOLD_SEC:
+            if raw_status in ["STANDING", "WALKING"]:
+                raw_status = "LOITERING"
+                behaviors.append({
+                    "type": "loitering", "severity": "low", "track_id": tid, 
+                    "description": f"🕐 Subject {tid} has been stationary for {stay_time:.0f}s."
+                })
+        
+        status_map[tid] = raw_status
+
+    # --- 3. BASELINE OCCUPANCY (LAST) ---
+    if persons:
         behaviors.append({
-            "type": "crowd_density",
-            "severity": severity,
-            "description": f"👥 CROWD: High density detected — {p_count} persons in frame",
-            "count": p_count,
-            "confidence": avg_conf
+            "type": "person_detected", "severity": "info", 
+            "description": f"👥 Monitoring {len(persons)} subject(s) in scene.",
+            "count": len(persons)
         })
 
-    # 4. VIOLENT CONFLICT / FIGHT DETECTION (Multi-subject interaction)
-    import math
-    if p_count >= 2:
-        for i in range(p_count):
-            for j in range(i + 1, p_count):
-                p1, p2 = persons[i], persons[j]
-                c1, c2 = p1.get("center"), p2.get("center")
-                id1, id2 = p1.get("track_id"), p2.get("track_id")
-                
-                if not c1 or not c2 or id1 is None or id2 is None: continue
-                
-                # Calculate pixel distance between the two subjects
-                dist = math.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
-                
-                # Fetch velocities for both
-                v1 = tracker.get_velocity(id1)
-                v2 = tracker.get_velocity(id2)
-                
-                # FIGHT LOGIC: If two people are dangerously close (< 150px) AND both are moving fast
-                if dist < 150 and (v1 > 80 or v2 > 80) and (min(v1, v2) > 30):
-                    fight_conf = (p1.get("confidence", 0) + p2.get("confidence", 0)) / 2
-                    behaviors.append({
-                        "type": "fight_detected",
-                        "severity": "critical",
-                        "description": f"🥊 FIGHT DETECTED: Violent physical conflict between subjects {id1} and {id2}!",
-                        "track_id": id1,
-                        "confidence": fight_conf
-                    })
-
-    # 5. SUSPICIOUS OBJECT / ABANDONED PACKAGE DETECTION
-    bags = [d for d in detections if d.get("class") in [24, 26, 28]]  # Backpack, Handbag, Suitcase
-    for bag in bags:
-        bag_id = bag.get("track_id")
-        bag_center = bag.get("center")
-        bag_conf = bag.get("confidence", 0.0)
-        if bag_id is not None and bag_center:
-            stationary_time = tracker.get_stationary_time(bag_id)
-            if stationary_time > 15: # 15 seconds stationary
-                # Check if any person is in proximity
-                is_attended = False
-                for p in persons:
-                    p_c = p.get("center")
-                    if p_c:
-                        dist = math.sqrt((bag_center[0] - p_c[0])**2 + (bag_center[1] - p_c[1])**2)
-                        if dist < 250: # Person is within ~250 pixels
-                            is_attended = True
-                            break
-                
-                if not is_attended:
-                    behaviors.append({
-                        "type": "abandoned_object",
-                        "severity": "critical",
-                        "description": f"🎒 SUSPICIOUS PACKAGE: Unattended {bag.get('label')} detected for {stationary_time:.0f}s!",
-                        "track_id": bag_id,
-                        "confidence": bag_conf
-                    })
-
-    # 6. CONTEXTUAL / ENVIRONMENTAL (Night Activity)
-    import datetime
-    hour = datetime.datetime.now().hour
-    if hour >= 22 or hour <= 5:
-        behaviors.append({
-            "type": "night_activity",
-            "severity": "low",
-            "description": "🌙 CONTEXT: System is active during high-risk late-night hours.",
-            "confidence": 1.0
-        })
-
+    behaviors.append({"type": "status_update", "status_map": status_map})
     return behaviors

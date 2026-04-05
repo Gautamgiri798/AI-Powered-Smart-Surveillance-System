@@ -2,6 +2,9 @@
 SafetySnap — AI-Powered Smart Surveillance System
 Main application entry point.
 """
+# import eventlet
+# eventlet.monkey_patch()
+
 from flask import Flask, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -15,7 +18,7 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024 # 500MB limit for mission c
 
 # Initialize extensions
 CORS(app, origins=Config.CORS_ORIGINS)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', ping_timeout=10, ping_interval=5)
 
 # Register blueprints
 from routes.auth_routes import auth_bp
@@ -120,12 +123,13 @@ if __name__ == "__main__":
     from models.db import init_db
     init_db()
     
-    # Pre-load the YOLO model on startup so that the first camera doesn't freeze
-    print("[SYSTEM] Preloading AI detection model...")
+    # Pre-load the YOLO model in a background thread to prevent port-blocking hangs
+    # on slower Windows systems.
+    print("[SYSTEM] INITIALIZING MISSION AI CORE IN BACKGROUND...")
+    import threading
     from services.detection_service import get_model
-    get_model()
+    threading.Thread(target=get_model, daemon=True).start()
     
     # Run the server with Flask-SocketIO
     print(f"\n[SYSTEM] 🚀 Starting server on port 5000...")
-
     socketio.run(app, host="0.0.0.0", port=5000, debug=True, allow_unsafe_werkzeug=True)

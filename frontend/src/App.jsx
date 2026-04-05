@@ -23,10 +23,13 @@ const PAGE_TITLES = {
 export default function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState('dashboard');
+  const [cameras, setCameras] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const {
     connected,
     alerts,
+    setAlerts,
     frames,
     detectionUpdates,
     cameraStatuses,
@@ -35,7 +38,43 @@ export default function App() {
     emitStartCamera,
     emitStopCamera,
     clearAlerts,
+    removeAlert,
   } = useSocket();
+
+  const refreshData = async () => {
+    setIsSyncing(true);
+    console.log('[MISSION] Initiating tactical data pulse...');
+    try {
+      const { getCameras, getEvents } = await import('./services/api');
+      const camData = await getCameras();
+      console.log('[MISSION] Node registry synchronized:', camData?.cameras?.length || 0, 'nodes.');
+      setCameras(camData?.cameras || []);
+      
+      const eventData = await getEvents({ limit: 20 });
+      console.log('[MISSION] Intel stream synchronized:', eventData?.events?.length || 0, 'situations.');
+      setAlerts(eventData?.events || []);
+    } catch (err) {
+      console.error('[CRITICAL] Core sync failure:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Load cameras and initial alerts
+  useEffect(() => {
+    if (!user) return;
+    refreshData();
+    
+    // Auto-retry once after situational core has time to warm up
+    const timer = setTimeout(() => {
+      setCameras(prev => {
+        if (prev.length === 0) refreshData();
+        return prev;
+      });
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, [user]);
 
   // Check for existing session
   useEffect(() => {
@@ -71,6 +110,7 @@ export default function App() {
       case 'dashboard':
         return (
           <Dashboard
+            cameras={cameras}
             alerts={alerts}
             frames={frames}
             detectionUpdates={detectionUpdates}
@@ -80,6 +120,9 @@ export default function App() {
             emitStartCamera={emitStartCamera}
             emitStopCamera={emitStopCamera}
             clearAlerts={clearAlerts}
+            removeAlert={removeAlert}
+            onRefresh={refreshData}
+            isSyncing={isSyncing}
           />
         );
       case 'cameras':
@@ -97,7 +140,7 @@ export default function App() {
       case 'alerts':
         return (
           <div style={{ maxWidth: 500, height: '100%' }}>
-            <AlertPanel alerts={alerts} onClear={clearAlerts} />
+            <AlertPanel alerts={alerts} onClear={clearAlerts} onRemove={removeAlert} />
           </div>
         );
       case 'events':

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import VideoFeed from './VideoFeed';
 import { getCameras, startCamera, stopCamera } from '../services/api';
-import { ChevronLeft, Grid } from 'lucide-react';
+import { ChevronLeft, Monitor } from 'lucide-react';
 
 export default function CameraGrid({ 
+  cameras: propCameras, 
   frames, 
   detectionUpdates, 
   cameraStatuses, 
@@ -12,10 +13,17 @@ export default function CameraGrid({
   focusedId,
   setFocusedId 
 }) {
-  const [cameras, setCameras] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [cameras, setCameras] = useState(propCameras || []);
+  const [loading, setLoading] = useState(!propCameras);
 
-  useEffect(() => { loadCameras(); }, []);
+  useEffect(() => {
+    if (propCameras) {
+      setCameras(propCameras);
+      setLoading(false);
+    } else {
+      loadCameras();
+    }
+  }, [propCameras]);
 
   const loadCameras = async () => {
     try {
@@ -64,7 +72,7 @@ export default function CameraGrid({
         <div className="focused-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div className="focused-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 16, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              <Grid size={22} color="var(--accent-primary)" />
+              <Monitor size={22} color="var(--accent-primary)" />
               <span style={{ opacity: 0.5, fontWeight: 500 }}>FOCUSED_COMMAND //</span> {focusedCamera.name}
             </h3>
             <button 
@@ -133,9 +141,6 @@ export default function CameraGrid({
               <div 
                 key={camera.camera_id} 
                 className="grid-item-wrapper"
-                onDoubleClick={() => setFocusedId(camera.camera_id)}
-                title="Double-click for Focused Mission Control"
-                style={{ cursor: 'pointer' }}
               >
                 <VideoFeed
                   camera={camera}
@@ -154,7 +159,7 @@ export default function CameraGrid({
 
       {cameras.length === 0 && (
         <div className="camera-card" style={{ padding: 48, textAlign: 'center', opacity: 0.6 }}>
-          <Grid size={48} style={{ color: 'var(--text-muted)', marginBottom: 16, margin: '0 auto', opacity: 0.3 }} />
+          <Monitor size={48} style={{ color: 'var(--text-muted)', marginBottom: 16, margin: '0 auto', opacity: 0.3 }} />
           <p style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-muted)' }}>NO MISSION NODES CONFIGURED</p>
           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 8 }}>Integrate situational sources in System Protocols</div>
         </div>

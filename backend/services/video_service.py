@@ -1,9 +1,10 @@
-"""Video ingestion and streaming service."""
+"""Video ingestion and streaming service (Hardened AI Worker Model)."""
 import cv2
 import sys
 import time
 import platform
 import threading
+import queue
 from config import Config
 from utils.frame_utils import resize_frame, encode_frame_to_base64, draw_detections
 from services.detection_service import detect_objects, get_detection_summary
@@ -14,9 +15,10 @@ from models.db import get_camera
 
 IS_WINDOWS = platform.system() == "Windows"
 
-
 class CameraStream:
-    """Manages a single camera feed with detection pipeline."""
+    """Persistent AI Worker Architecture (Zero-Spawning overhead for maximum speed)."""
+    
+    _emit_lock = threading.Lock()
 
     def __init__(self, camera_id: str, source, socketio=None):
         self.camera_id = camera_id
@@ -24,249 +26,199 @@ class CameraStream:
         self.socketio = socketio
         self.cap = None
         self.running = False
-        self.thread = None
-        self.latest_frame = None
+        
+        # State Matricies
         self.latest_detections = []
+        self.latest_status = {} # Map of tid -> action_status
         self.frame_count = 0
         self.fps = 0
         self._fps_start = time.time()
         self._fps_counter = 0
-        self._last_alert_time = {}  # Throttle alerts
-        self._is_detecting = False
-        self._last_detect_time = 0
-
-        # Prefetch camera metadata for NLP context
-        cam_data = get_camera(self.camera_id)
-        self.camera_name = cam_data.get("name", "Surveillance Node") if cam_data else "Surveillance Node"
+        self._last_alert_time = {}
+        
+        # Persistent AI Worker Protocol
+        self.ai_queue = queue.Queue(maxsize=1) # Always keep latest frame only
+        self.ai_thread = None
+        self.stream_thread = None
+        self.camera_name = "Surveillance Node"
 
     def start(self):
-        """Start the camera stream."""
-        if self.running:
-            return True
-
-        # Parse source (int for USB/system camera, string for RTSP/file)
-        try:
-            source = int(self.source)
-            is_usb = True
-        except (ValueError, TypeError):
-            source = self.source
-            is_usb = False
-
+        """Unified Mission Start (Worker Model)."""
+        is_usb = str(self.source).isdigit() or self.source.startswith("USB")
+        source = int(self.source) if is_usb else self.source
+        
         self.cap = self._open_camera(source, is_usb)
-
         if self.cap is None or not self.cap.isOpened():
-            print(f"[CAMERA {self.camera_id}] ❌ Failed to open: {self.source}")
+            print(f"[MISSION {self.camera_id}] ❌ FAIL: Hardware Busy.")
             return False
-
-        # Set capture properties for USB cameras
-        if is_usb:
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, Config.FRAME_WIDTH)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.FRAME_HEIGHT)
-            self.cap.set(cv2.CAP_PROP_FPS, Config.FPS_LIMIT)
-
-        ret, test_frame = self.cap.read()
-        if not ret or test_frame is None:
-            print(f"[CAMERA {self.camera_id}] ❌ Camera opened but cannot read frames")
-            self.cap.release()
-            return False
-
-        print(f"[CAMERA {self.camera_id}] ✅ Video Source active — resolution: "
-              f"{test_frame.shape[1]}x{test_frame.shape[0]}")
 
         self.running = True
-        self.thread = threading.Thread(target=self._stream_loop, daemon=True)
-        self.thread.start()
-        print(f"[CAMERA {self.camera_id}] 🎥 Streaming started from: {self.source}")
+        
+        # Thread 1: Mission Streamer
+        self.stream_thread = threading.Thread(target=self._stream_loop, daemon=True)
+        self.stream_thread.start()
+        
+        # Thread 2: Mission AI Worker (Starts once, runs forever)
+        self.ai_thread = threading.Thread(target=self._ai_worker_loop, daemon=True)
+        self.ai_thread.start()
+        
+        print(f"[MISSION {self.camera_id}] 🛰️ LINK ESTABLISHED: Persistent AI Engine ONLINE.")
         return True
 
     def _open_camera(self, source, is_usb):
-        """Open camera and set requested HD resolution with fallbacks (optimized for Windows)."""
-        if not is_usb:
-            return cv2.VideoCapture(source)
-            
-        # On Windows, DirectShow is much faster at initiating the stream
-        backend = cv2.CAP_DSHOW if IS_WINDOWS else cv2.CAP_ANY
-
-        # Try primary index
-        cap = cv2.VideoCapture(source, backend)
-        if cap.isOpened():
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, Config.FRAME_WIDTH)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.FRAME_HEIGHT)
-            return cap
-            
-        # Try alternate index (0 <-> 1 swap) if primary fails
-        alt_source = 0 if str(source) == "1" else 1
-        print(f"[CAMERA {self.camera_id}] Primary {source} failed, trying fallback {alt_source}...")
-        cap = cv2.VideoCapture(alt_source, backend)
-        if cap.isOpened():
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, Config.FRAME_WIDTH)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.FRAME_HEIGHT)
-            return cap
-            
+        """Intelligent Multi-Backend Opener."""
+        backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if IS_WINDOWS else [cv2.CAP_ANY]
+        for backend in backends:
+            cap = cv2.VideoCapture(source, backend)
+            if cap.isOpened():
+                # Focus on 640x360 (16:9) directly from hardware if possible
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                return cap
         return None
 
     def stop(self):
-        """Stop the camera stream."""
+        """Safe Hardware Release."""
         self.running = False
-        if self.cap:
-            self.cap.release()
-        print(f"[CAMERA {self.camera_id}] Stopped")
+        if self.cap: self.cap.release()
 
     def _stream_loop(self):
-        """Main streaming loop with asynchronous detection."""
+        """High-Frequency Broadcaster (Optimized for Video Fluidity)."""
         frame_delay = 1.0 / Config.FPS_LIMIT
-        is_file = isinstance(self.source, str) and not self.source.startswith("rtsp://")
-        last_emit_time = 0
         
         while self.running:
+            loop_start = time.time()
+            
+            # 1. Physical Capture
             ret, frame = self.cap.read()
-            if (not ret or frame is None) and is_file:
-                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                ret, frame = self.cap.read()
-
             if not ret or frame is None:
-                print(f"[CAMERA {self.camera_id}] ⚠️ Frame read failed, retrying...")
-                time.sleep(1)
+                time.sleep(0.01)
                 continue
 
-            # Clear buffer for live feeds by dropping frames; throttle video files with sleep
-            if not is_file:
-                now = time.time()
-                if now - last_emit_time < frame_delay:
-                    continue
-                last_emit_time = now
-
-            frame = resize_frame(frame)
+            fh, fw = frame.shape[:2]
+            # Emit in 480p for bandwidth efficiency
+            frame_disp = cv2.resize(frame, (480, 270))
             if hasattr(Config, 'MIRROR_FEED') and Config.MIRROR_FEED:
-                frame = cv2.flip(frame, 1)
-            self.frame_count += 1
-            self._fps_counter += 1
-
-            # Calculate FPS
-            elapsed = time.time() - self._fps_start
-            if elapsed >= 1.0:
-                self.fps = self._fps_counter / elapsed
-                self._fps_counter = 0
-                self._fps_start = time.time()
-
-            # Run high-frequency detection asynchronously (target ~12Hz for action recognition)
-            now = time.time()
-            if not self._is_detecting and (now - self._last_detect_time) > 0.08:
-                self._is_detecting = True
-                self._last_detect_time = now
-                threading.Thread(target=self._run_detection, args=(frame.copy(),), daemon=True).start()
-
-            # Broadcast frame
-            if self.socketio:
-                annotated_frame = draw_detections(frame.copy(), self.latest_detections)
-                # HUD info
-                cv2.putText(annotated_frame, f"FPS: {self.fps:.1f}", (10, 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (34, 197, 94), 2)
-                
-                frame_b64 = encode_frame_to_base64(annotated_frame)
-                self.socketio.emit("video_frame", {
-                    "camera_id": self.camera_id,
-                    "frame": frame_b64,
-                    "timestamp": time.time()
-                })
-
-            if is_file:
-                time.sleep(frame_delay)
-
-    def _run_detection(self, frame):
-        """Worker function for detection and analysis."""
-        try:
-            detections = detect_objects(frame)
-            tracker = get_tracker(self.camera_id)
-            detections = tracker.update(detections, frame=frame)
-            self.latest_detections = detections
-
-            # Analyze behavior (Rule-based + SentryLSTM)
-            behaviors = analyze_behavior(self.camera_id, detections)
-
-            # --- Multimodal AI: NLP Scene Understanding ---
-            briefing = scene_engine.generate_report(
-                self.camera_id, 
-                self.camera_name,
-                detections, 
-                behaviors
-            )
+                frame_disp = cv2.flip(frame_disp, 1)
             
-            if self.socketio:
-                self.socketio.emit("scene_briefing", briefing)
-                self.socketio.emit("live_behaviors", {
-                    "camera_id": self.camera_id,
-                    "behaviors": behaviors
-                })
+            # 2. Feed the AI Worker (Non-blocking)
+            try:
+                if self.ai_queue.empty():
+                    self.ai_queue.put_nowait(frame.copy())
+            except queue.Full:
+                pass # Already has latest frame cached
 
-            # Handle Alerts (Decoupled emitting)
-            for behavior in behaviors:
-                b_type = behavior.get("id") or behavior["type"]
-                now = time.time()
+            # 3. Synchronized Emission
+            if self.socketio:
+                annotated = draw_detections(
+                    frame_disp.copy(), 
+                    self.latest_detections, 
+                    orig_size=(fw, fh),
+                    status_map=self.latest_status
+                )
+                b64 = encode_frame_to_base64(annotated)
                 
-                # Aggressive real-time reporting for human activity metrics
-                severity = behavior.get("severity", "info")
-                throttle = 1.0 # 1Hz reporting frequency for all situational updates
+                with self._emit_lock:
+                    self.socketio.emit("video_frame", {
+                        "camera_id": self.camera_id, 
+                        "frame": b64, 
+                        "timestamp": time.time()
+                    })
+
+            # 4. Global Sync Cycle
+            elapsed = time.time() - loop_start
+            time.sleep(max(0.01, frame_delay - elapsed))
+
+    def _ai_worker_loop(self):
+        """Dedicated AI Engine Worker (Zero Thread Context Swapping)."""
+        print(f"[AI WORKER {self.camera_id}] Active and waiting for signal...")
+        while self.running:
+            try:
+                # Wait for next frame to analyze
+                frame = self.ai_queue.get(timeout=1.0)
                 
-                if now - self._last_alert_time.get(b_type, 0) > throttle:
-                    self._last_alert_time[b_type] = now
-                    # Import alert_service locally to avoid circularity
-                    from services.alert_service import create_alert
-                    alert = create_alert(self.camera_id, behavior)
+                # Perform Core Inference
+                detections = detect_objects(frame)
+                tracker = get_tracker(self.camera_id)
+                detections = tracker.update(detections, frame=frame)
+                self.latest_detections = detections
+                
+                # Dynamic Behavioral Pass
+                behaviors = analyze_behavior(self.camera_id, detections)
+                
+                # Extract Action Status Map for HUD
+                for b in behaviors:
+                    if b.get("type") == "status_update":
+                        self.latest_status = b.get("status_map", {})
+                        break
+                
+                if self.socketio:
+                    with self._emit_lock:
+                        self.socketio.emit("live_behaviors", {"camera_id": self.camera_id, "behaviors": behaviors})
+                        summary = get_detection_summary(detections)
+                        self.socketio.emit("detection_update", {**summary, "camera_id": self.camera_id})
                     
-                    if self.socketio:
-                        # Broadcast globally so App.jsx alerts hook catches it
-                        self.socketio.emit("alert", alert)
-                        # Also push to specific camera room if needed
-                        self.socketio.emit(f"alert_{self.camera_id}", alert)
+                    # NLP Report Engine
+                    briefing = scene_engine.generate_report(self.camera_id, "Node", detections, behaviors)
+                    with self._emit_lock:
+                        self.socketio.emit("scene_briefing", briefing)
 
-            # Emit summary
-            if self.socketio:
-                summary = get_detection_summary(detections)
-                summary.update({
-                    "camera_id": self.camera_id,
-                    "fps": round(self.fps, 1)
-                })
-                print(f"[DEBUG] Emit detection_update: {summary}")
-                self.socketio.emit("detection_update", summary)
+                # Tactical Alert Routing (Critical & High-Value Events)
+                from services.alert_service import create_alert
+                for b in behaviors:
+                    b_type = b.get("type", "unknown")
+                    severity = b.get("severity", "info")
+                    
+                    # Security Logic: Broadcast specific behaviors, exclude raw updates and generic person counting to prevent spam
+                    if b_type in ["status_update", "person_detected"]:
+                        continue
+                        
+                    b_key = f"{self.camera_id}_{b_type}"
+                    # Individual Target Throttle: Prevent redundant alert spam for the same incident
+                    if time.time() - self._last_alert_time.get(b_key, 0) > 5.0:
+                        self._last_alert_time[b_key] = time.time()
+                        
+                        print(f"[DEBUG ALERT FLOW] Creating alert for {b_type} (Sev: {severity})")
+                        # Generate alert (includes transactional record-keeping)
+                        alert_data = create_alert(self.camera_id, b)
+                        print(f"[DEBUG ALERT RESULT] {alert_data.get('_id')}")
+                        
+                        print(f"[MISSION ALERT] {self.camera_id} // {b_type.upper()} // SEV: {severity.upper()}")
+                        
+                        with self._emit_lock:
+                            # Standardize broadcast to ensure delivery to dashboard
+                            self.socketio.emit("alert", alert_data)
+                
+                self.ai_queue.task_done()
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"[AI WORKER ERROR]: {e}")
+                time.sleep(0.5)
 
-        except Exception as e:
-            import traceback
-            err_msg = traceback.format_exc()
-            print(f"[CAMERA {self.camera_id}] ❌ AI Thread error: {e}")
-            with open("error.log", "a") as f:
-                f.write(err_msg + "\n")
-        finally:
-            self._is_detecting = False
-
-
-# Global stream manager
+# Global Manager
 _streams = {}
 
-def start_camera(camera_id: str, source, socketio=None):
+def start_camera(camera_id, source, socketio=None):
     if camera_id in _streams:
         _streams[camera_id].stop()
-
     stream = CameraStream(camera_id, source, socketio)
     if stream.start():
         _streams[camera_id] = stream
         return True
     return False
 
-def stop_camera(camera_id: str):
+def stop_camera(camera_id):
     if camera_id in _streams:
         _streams[camera_id].stop()
         del _streams[camera_id]
         return True
     return False
 
-def stop_all_cameras():
-    for cam_id in list(_streams.keys()):
-        _streams[cam_id].stop()
-    _streams.clear()
-
 def get_active_cameras():
     return list(_streams.keys())
 
-def get_stream(camera_id: str):
+def get_stream(camera_id):
     return _streams.get(camera_id)

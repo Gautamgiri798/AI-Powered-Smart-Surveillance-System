@@ -50,29 +50,29 @@ export default function VideoFeed({
     >
       
       {/* High-Fidelity Tactical Header */}
-      <div className="camera-header" style={{ padding: '20px 10px 20px 24px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="camera-header" style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <div className={`status-led ${isStreaming ? 'led-active' : 'led-inactive'}`} style={{ width: 8, height: 8 }}></div>
-            <div className="cam-name" style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>
+            <div className="cam-name" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>
               {camera.name || 'UNNAMED_NODE'}
             </div>
           </div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', opacity: 0.8 }}>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', opacity: 0.8 }}>
             LOCATION // {camera.location?.toUpperCase() || 'UNKNOWN_COORD'}
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, paddingRight: 80 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
           <div style={{ 
             fontSize: '0.6rem', fontWeight: 900, 
             color: isStreaming ? 'var(--accent-green)' : 'var(--accent-red)', 
             letterSpacing: '0.15em', background: 'rgba(255,255,255,0.03)', 
-            padding: '4px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)'
+            padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)'
           }}>
             {isStreaming ? 'STREAMING' : 'OFFLINE'}
           </div>
-          <div style={{ fontSize: '0.55rem', opacity: 0.4, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+          <div style={{ fontSize: '0.52rem', opacity: 0.4, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
             NODE_ID: {camera.camera_id}
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function VideoFeed({
       )}
 
       {/* Forensic Monitoring View */}
-      <div className="video-view-wrapper" style={{ minHeight: showFullscreen ? '100%' : '340px', background: '#020617', position: 'relative', flex: 1, overflow: 'hidden' }}>
+      <div className="video-view-wrapper" style={{ aspectRatio: '16/9', background: '#020617', position: 'relative', width: '100%', overflow: 'hidden' }}>
         {displayFrame ? (
           <>
             <img 
@@ -177,43 +177,46 @@ export default function VideoFeed({
       </div>
 
       {/* Mission Control Panel */}
-      <div className="camera-footer" style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ display: 'flex', gap: 12 }}>
-          {!isStreaming ? (
-            <button
-              className="btn-engage-elite"
-              onClick={() => onStart(camera.camera_id)}
-            >
-              <Zap size={14} fill="currentColor" />
-              START FEEDS
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 10 }}>
+      <div className="camera-footer" style={{ padding: '14px 20px', background: 'rgba(255,255,255,0.01)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {!isStreaming ? (
               <button
-                className="mission-action-btn btn-ack-elite"
-                onClick={togglePause}
-                style={{ padding: '10px 18px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                className="btn-engage-elite"
+                onClick={() => onStart(camera.camera_id)}
+                style={{ padding: '8px 16px', fontSize: '0.62rem' }}
               >
-                {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-                {isPaused ? 'RESUME' : 'PAUSE'}
+                <Zap size={12} fill="currentColor" />
+                START FEEDS
               </button>
-              <button
-                className="mission-action-btn btn-purge-elite"
-                onClick={() => onStop(camera.camera_id)}
-                style={{ width: 44, height: 44, padding: 0, background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-red)', border: '1px solid rgba(244, 63, 94, 0.2)' }}
-              >
-                <Square size={14} fill="currentColor" />
-              </button>
-            </div>
-          )}
-        </div>
-        
-        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 800, letterSpacing: '0.05em' }}>
-            {camera.rtsp_url === '0' ? 'INTERNAL_CORE_LINK' : 'EXTERNAL_USB_LINK'}
+            ) : (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  className="mission-action-btn btn-ack-elite"
+                  onClick={togglePause}
+                  style={{ padding: '8px 14px', fontSize: '0.62rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                >
+                  {isPaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} fill="currentColor" />}
+                  {isPaused ? 'RESUME' : 'PAUSE'}
+                </button>
+                <button
+                  className="mission-action-btn btn-purge-elite"
+                  onClick={() => onStop(camera.camera_id)}
+                  style={{ width: 40, height: 40, padding: 0, background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-red)', border: '1px solid rgba(244, 63, 94, 0.2)' }}
+                >
+                  <Square size={12} fill="currentColor" />
+                </button>
+              </div>
+            )}
           </div>
-          <div style={{ width: 50, height: 2, background: 'rgba(255,255,255,0.05)', marginLeft: 'auto', borderRadius: 4 }}>
-            {isStreaming && <div className="pulse" style={{ width: '100%', height: '100%', background: 'var(--accent-green)', opacity: 0.3 }}></div>}
+          
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ fontSize: '0.52rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 800, letterSpacing: '0.05em' }}>
+              {camera.rtsp_url === '0' ? 'INTERNAL_CORE_LINK' : 'EXTERNAL_USB_LINK'}
+            </div>
+            <div style={{ width: 40, height: 1.5, background: 'rgba(255,255,255,0.05)', marginLeft: 'auto', borderRadius: 4 }}>
+              {isStreaming && <div className="pulse" style={{ width: '100%', height: '100%', background: 'var(--accent-green)', opacity: 0.3 }}></div>}
+            </div>
           </div>
         </div>
       </div>
