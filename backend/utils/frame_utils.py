@@ -54,3 +54,24 @@ def draw_detections(frame, detections, orig_size=None, status_map=None):
         cv2.putText(frame, tag, (x1 + 4, y1 - 6), font, scale, (255, 255, 255), 1, cv2.LINE_AA)
 
     return frame
+
+def save_alert_frame(frame, camera_id):
+    """
+    Save a forensic snapshot of the current frame for alert logging.
+    Stored in /backend/static/alerts/ for persistent archival.
+    """
+    import os
+    import time
+    
+    # Ensure mission directory exists
+    save_dir = os.path.join("static", "alerts")
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        
+    filename = f"capture_{camera_id}_{int(time.time())}.jpg"
+    rel_path = f"/static/alerts/{filename}"
+    abs_path = os.path.join(save_dir, filename)
+    
+    # Save at higher quality for archival (80%)
+    cv2.imwrite(abs_path, frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    return rel_path

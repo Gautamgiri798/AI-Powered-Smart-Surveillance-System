@@ -38,18 +38,31 @@ export default function Dashboard({
   }, []);
 
   const stats = useMemo(() => {
-    const activeCount = Object.keys(cameraStatuses || {}).filter(
-      (k) => cameraStatuses[k] === 'streaming'
-    ).length;
+    // 1. Calculate truly active cameras by merging real-time socket status with DB initial state
+    const activeIds = new Set();
     
-    // Fallback to absolute camera registry if socket hasn't reported yet
-    const displayActiveCount = activeCount > 0 ? activeCount : (cameras?.length || 0);
+    // Check initial DB state
+    cameras.forEach(cam => {
+      if (cam.is_streaming) activeIds.add(cam.camera_id);
+    });
 
-    // Unify real-time alert count with historical stats
-    const liveCriticalCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
+    // Layer in real-time overrides from Socket.IO
+    Object.entries(cameraStatuses || {}).forEach(([id, status]) => {
+      if (status === 'streaming') activeIds.add(id);
+      else activeIds.delete(id);
+    });
+    
+    const displayActiveCount = activeIds.size;
+
+    // 2. Unify real-time alert count with historical stats
+    // We treat eventStats (DB) as the source of truth for history, and alerts (live) as current session additions
+    // However, since eventStats refreshes every 10s, we just ensure we show the most up-to-date total.
     const displayTotalEvents = Math.max(alerts.length, eventStats?.total_events || 0);
+    
+    const liveCriticalCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
     const displayCriticalAlerts = Math.max(liveCriticalCount, eventStats?.by_severity?.critical || 0);
 
+    // 3. Current occupancy (People Count) across all active frames
     const totalPersons = Object.values(detectionUpdates || {}).reduce(
       (sum, d) => sum + (d?.persons || 0),
       0
@@ -61,7 +74,7 @@ export default function Dashboard({
       criticalAlerts: displayCriticalAlerts,
       personsDetected: totalPersons,
     };
-  }, [cameraStatuses, frames, detectionUpdates, eventStats]);
+  }, [cameraStatuses, alerts, detectionUpdates, eventStats, cameras]);
 
   return (
     <div className={`dashboard-container ${focusedId ? 'theater-mode' : ''}`}>

@@ -12,7 +12,7 @@ def get_model():
     if _model is None:
         try:
             from ultralytics import YOLO
-            _model = YOLO("yolov8s_openvino_model")
+            _model = YOLO("yolov8s_openvino_model", task="detect")
             print("[DETECTION] Core Object Engine loaded: yolov8s_openvino")
         except Exception as e:
             print(f"[DETECTION] Failed to load core model: {e}")
@@ -25,7 +25,7 @@ def get_pose_model():
     if _pose_model is None:
         try:
             from ultralytics import YOLO
-            _pose_model = YOLO("yolov8s-pose_openvino_model")
+            _pose_model = YOLO("yolov8s-pose_openvino_model", task="pose")
             print("[POSE] Human Action Engine loaded: yolov8s-pose_openvino")
         except Exception as e:
             print(f"[POSE] Failed to load pose engine: {e}")
@@ -109,13 +109,15 @@ def detect_objects(frame):
         enhanced_frame = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
 
         # 1. Detection Pass — higher confidence to reduce false positives
+        # Detection Pass — use original frame for maximum model fidelity
         results = model(
-            enhanced_frame, 
-            conf=Config.YOLO_CONFIDENCE,  # Use config value (0.45)
-            iou=0.50,       # Stricter NMS within YOLO itself
+            frame, 
+            conf=Config.YOLO_CONFIDENCE, 
+            iou=0.45, 
             imgsz=640, 
             device='cpu', 
-            verbose=False
+            verbose=False,
+            classes=Config.DETECTION_CLASSES
         )
         detections = []
 
@@ -129,8 +131,15 @@ def detect_objects(frame):
 
                     if cls_int not in Config.DETECTION_CLASSES: continue
                     
-                    # Higher threshold for weapon classes to reduce false positives
-                    threshold = 0.65 if cls_int in Config.WEAPON_CLASSES else Config.YOLO_CONFIDENCE
+                    # Class-specific sensitivity matrices to prevent false positives for common misidentifications
+                    # Cell phones (67) often ghost on bottles/remotes, so we require higher confidence.
+                    if cls_int == 67:
+                        threshold = 0.65
+                    elif cls_int in Config.WEAPON_CLASSES:
+                        threshold = 0.55 # Balanced for security vs noise
+                    else:
+                        threshold = Config.YOLO_CONFIDENCE
+                        
                     if conf < threshold: continue
 
                     label = model.names.get(cls_int, f"class_{cls_int}")
@@ -147,12 +156,13 @@ def detect_objects(frame):
                     })
 
         # 2. Apply strict NMS to eliminate duplicate detections of same person
-        detections = _nms_per_class(detections, iou_threshold=0.40)
+        # Aggressive threshold (0.25) to collapse near-identical bounding boxes
+        detections = _nms_per_class(detections, iou_threshold=0.25)
 
         # 3. Pose Pass — only if persons detected
         has_persons = any(d["class"] == 0 for d in detections)
         if has_persons and pose_model is not None:
-            pose_results = pose_model(enhanced_frame, conf=0.45, imgsz=640, verbose=False)
+            pose_results = pose_model(frame, conf=0.35, imgsz=640, verbose=False)
             for pr in pose_results:
                 if pr.keypoints is not None:
                     for pose_kp_tensor in pr.keypoints.data:

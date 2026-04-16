@@ -5,9 +5,10 @@ Main application entry point.
 # import eventlet
 # eventlet.monkey_patch()
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_socketio import SocketIO
 from flask_cors import CORS
+import os
 from config import Config
 
 # Initialize Flask app
@@ -33,6 +34,10 @@ app.register_blueprint(event_bp)
 app.register_blueprint(stream_bp)
 app.register_blueprint(analysis_bp)
 
+# ----- Forensic Asset Serving -----
+@app.route('/static/alerts/<path:filename>')
+def serve_alert_image(filename):
+    return send_from_directory(os.path.join(app.root_path, 'static', 'alerts'), filename)
 
 # ----- Root & Health -----
 @app.route("/")
@@ -131,5 +136,5 @@ if __name__ == "__main__":
     threading.Thread(target=get_model, daemon=True).start()
     
     # Run the server with Flask-SocketIO
-    print(f"\n[SYSTEM] 🚀 Starting server on port 5000...")
+    print(f"\n[SYSTEM] Starting server on port 5000...")
     socketio.run(app, host="0.0.0.0", port=5000, debug=True, allow_unsafe_werkzeug=True)

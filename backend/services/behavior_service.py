@@ -204,12 +204,20 @@ def analyze_behavior(camera_id: str, detections: list) -> list:
                 "description": f"🚶 Subject {tid} is walking."
             })
         elif aspect > Config.FALL_THRESHOLD_RATIO and bh > 30:
-            # Very wide aspect ratio = person is horizontal (fallen)
-            raw_status = "POSTURE_ANOMALY"
-            behaviors.append({
-                "type": "posture_anomaly", "severity": "critical", "track_id": tid, 
-                "description": f"🚑 Subject {tid} may have fallen."
-            })
+            # Person is horizontal. Check if they are also near the ground to confirm a fall.
+            # Using 0.6 as a threshold for the bottom of the bounding box
+            # Normalized bottom coordinate
+            bottom_y = bbox[3] / (Config.FRAME_HEIGHT if Config.FRAME_HEIGHT > 0 else 270)
+            
+            if bottom_y > 0.65:
+                raw_status = "POSTURE_ANOMALY"
+                behaviors.append({
+                    "type": "posture_anomaly", "severity": "critical", "track_id": tid, 
+                    "description": f"🚑 ALERT: Subject {tid} may have fallen (Ground Detection)."
+                })
+            else:
+                # Wide box but not on ground? Likely reaching out/lounging
+                raw_status = "SITTING" if aspect > 1.2 else "STANDING"
         else:
             # Determine posture from keypoints first, then fallback to aspect ratio
             kp_posture = _classify_posture_from_keypoints(

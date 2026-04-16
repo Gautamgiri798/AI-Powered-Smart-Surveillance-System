@@ -171,7 +171,9 @@ class CameraStream:
                     severity = b.get("severity", "info")
                     
                     # Security Logic: Broadcast specific behaviors, exclude raw updates and generic person counting to prevent spam
-                    if b_type in ["status_update", "person_detected"]:
+                    # Threshold for saving events to the permanent situational log
+                    # Now allows all detections (Sitting, Walking, etc.) for full forensic history
+                    if b_type == "status_update":
                         continue
                         
                     b_key = f"{self.camera_id}_{b_type}"
@@ -179,9 +181,14 @@ class CameraStream:
                     if time.time() - self._last_alert_time.get(b_key, 0) > 5.0:
                         self._last_alert_time[b_key] = time.time()
                         
-                        print(f"[DEBUG ALERT FLOW] Creating alert for {b_type} (Sev: {severity})")
-                        # Generate alert (includes transactional record-keeping)
-                        alert_data = create_alert(self.camera_id, b)
+                        # Forensic Capture Protocol: Save frame for high-severity events
+                        frame_url = None
+                        if severity in ["critical", "high"]:
+                            from utils.frame_utils import save_alert_frame
+                            frame_url = save_alert_frame(frame, self.camera_id)
+
+                        # Generate alert (includes transactional record-keeping and frame-linking)
+                        alert_data = create_alert(self.camera_id, b, frame_url=frame_url)
                         print(f"[DEBUG ALERT RESULT] {alert_data.get('_id')}")
                         
                         print(f"[MISSION ALERT] {self.camera_id} // {b_type.upper()} // SEV: {severity.upper()}")

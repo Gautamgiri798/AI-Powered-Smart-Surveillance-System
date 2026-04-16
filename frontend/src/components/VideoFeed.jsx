@@ -11,6 +11,7 @@ export default function VideoFeed({
 }) {
   const [isPaused, setIsPaused] = useState(false);
   const [lastFrame, setLastFrame] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -24,6 +25,14 @@ export default function VideoFeed({
     if (!isPaused) setLastFrame(frame);
     setIsPaused(!isPaused);
   };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement && document.fullscreenElement === containerRef.current);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -40,11 +49,11 @@ export default function VideoFeed({
 
   return (
     <div 
-      className={`camera-card ${isStreaming ? 'streaming-active' : ''}`}
+      className={`camera-card ${isStreaming ? 'streaming-active' : ''} ${isFullscreen ? 'is-fullscreen' : ''}`}
       ref={containerRef}
       style={{ 
         overflow: 'hidden', position: 'relative', 
-        height: showFullscreen ? '100%' : 'auto',
+        height: (showFullscreen || isFullscreen) ? '100%' : 'auto',
         display: 'flex', flexDirection: 'column'
       }}
     >
@@ -63,52 +72,49 @@ export default function VideoFeed({
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-          <div style={{ 
-            fontSize: '0.6rem', fontWeight: 900, 
-            color: isStreaming ? 'var(--accent-green)' : 'var(--accent-red)', 
-            letterSpacing: '0.15em', background: 'rgba(255,255,255,0.03)', 
-            padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)'
-          }}>
-            {isStreaming ? 'STREAMING' : 'OFFLINE'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+            <div style={{ 
+              fontSize: '0.6rem', fontWeight: 900, 
+              color: isStreaming ? 'var(--accent-green)' : 'var(--accent-red)', 
+              letterSpacing: '0.15em', background: 'rgba(255,255,255,0.03)', 
+              padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+              {isStreaming ? 'STREAMING' : 'OFFLINE'}
+            </div>
+            <div style={{ fontSize: '0.52rem', opacity: 0.4, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+              NODE_ID: {camera.camera_id}
+            </div>
           </div>
-          <div style={{ fontSize: '0.52rem', opacity: 0.4, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-            NODE_ID: {camera.camera_id}
-          </div>
+
+          <button 
+            className="mission-action-btn fullscreen-btn-tactical"
+            onClick={toggleFullscreen}
+            style={{ 
+              background: 'rgba(255, 255, 255, 0.05)', 
+              border: '1px solid rgba(255, 255, 255, 0.1)', 
+              color: 'var(--text-secondary)',
+              width: 34, height: 34, padding: 0,
+              borderRadius: 8, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              outline: 'none'
+            }}
+            title={isFullscreen ? 'Exit Full-Screen' : 'Full-Screen Core View'}
+          >
+            {isFullscreen ? <Square size={14} strokeWidth={2.5} /> : <Maximize size={14} strokeWidth={2.5} />}
+          </button>
         </div>
       </div>
 
-      {/* Absolute Fullscreen Toggle */}
-      {showFullscreen && (
-        <button 
-          className="mission-action-btn fullscreen-btn-tactical"
-          onClick={toggleFullscreen}
-          style={{ 
-            position: 'absolute', top: 22, right: 24, zIndex: 100,
-            background: 'rgba(99, 102, 241, 0.15)', 
-            border: '1px solid rgba(99, 102, 241, 0.4)', 
-            color: 'var(--accent-primary)',
-            width: 42, height: 42, padding: 0,
-            borderRadius: 12, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-          title="Surgical Fullscreen Toggle"
-        >
-          <Maximize size={18} strokeWidth={3} />
-        </button>
-      )}
-
       {/* Forensic Monitoring View */}
-      <div className="video-view-wrapper" style={{ aspectRatio: '16/9', background: '#020617', position: 'relative', width: '100%', overflow: 'hidden' }}>
+      <div className="video-view-wrapper" style={{ flex: 1, background: '#020617', position: 'relative', width: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {displayFrame ? (
           <>
             <img 
               src={`data:image/jpeg;base64,${displayFrame}`} 
               alt="Feed" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} 
+              style={{ width: '100%', height: '100%', objectFit: isFullscreen ? 'contain' : 'cover', display: 'block' }} 
             />
             
             {/* Tactical Scanline & Vignette */}
@@ -177,67 +183,66 @@ export default function VideoFeed({
       </div>
 
       {/* Mission Control Panel */}
-      <div className="camera-footer" style={{ padding: '14px 20px', background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {!isStreaming ? (
-              <button
-                className="btn-engage-elite"
-                onClick={() => onStart(camera.camera_id)}
-                style={{ padding: '8px 16px', fontSize: '0.62rem' }}
-              >
-                <Zap size={12} fill="currentColor" />
-                START FEEDS
-              </button>
-            ) : (
-              <div style={{ display: 'flex', gap: 10 }}>
+      {!isFullscreen && (
+        <div className="camera-footer" style={{ padding: '14px 20px', background: 'rgba(255,255,255,0.01)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {!isStreaming ? (
                 <button
-                  className="mission-action-btn btn-ack-elite"
-                  onClick={togglePause}
-                  style={{ padding: '8px 14px', fontSize: '0.62rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                  className="btn-engage-elite"
+                  onClick={() => onStart(camera.camera_id)}
+                  style={{ padding: '8px 16px', fontSize: '0.62rem' }}
                 >
-                  {isPaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} fill="currentColor" />}
-                  {isPaused ? 'RESUME' : 'PAUSE'}
+                  <Zap size={12} fill="currentColor" />
+                  START FEEDS
                 </button>
-                <button
-                  className="mission-action-btn btn-purge-elite"
-                  onClick={() => onStop(camera.camera_id)}
-                  style={{ width: 40, height: 40, padding: 0, background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-red)', border: '1px solid rgba(244, 63, 94, 0.2)' }}
-                >
-                  <Square size={12} fill="currentColor" />
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ fontSize: '0.52rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 800, letterSpacing: '0.05em' }}>
-              {camera.rtsp_url === '0' ? 'INTERNAL_CORE_LINK' : 'EXTERNAL_USB_LINK'}
+              ) : (
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    className="mission-action-btn btn-ack-elite"
+                    onClick={togglePause}
+                    style={{ padding: '8px 14px', fontSize: '0.62rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                  >
+                    {isPaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} fill="currentColor" />}
+                    {isPaused ? 'RESUME' : 'PAUSE'}
+                  </button>
+                  <button
+                    className="mission-action-btn btn-purge-elite"
+                    onClick={() => onStop(camera.camera_id)}
+                    style={{ width: 40, height: 40, padding: 0, background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-red)', border: '1px solid rgba(244, 63, 94, 0.2)' }}
+                  >
+                    <Square size={12} fill="currentColor" />
+                  </button>
+                </div>
+              )}
             </div>
-            <div style={{ width: 40, height: 1.5, background: 'rgba(255,255,255,0.05)', marginLeft: 'auto', borderRadius: 4 }}>
-              {isStreaming && <div className="pulse" style={{ width: '100%', height: '100%', background: 'var(--accent-green)', opacity: 0.3 }}></div>}
+            
+            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ fontSize: '0.52rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 800, letterSpacing: '0.05em' }}>
+                {camera.rtsp_url === '0' ? 'INTERNAL_CORE_LINK' : 'EXTERNAL_USB_LINK'}
+              </div>
+              <div style={{ width: 40, height: 1.5, background: 'rgba(255,255,255,0.05)', marginLeft: 'auto', borderRadius: 4 }}>
+                {isStreaming && <div className="pulse" style={{ width: '100%', height: '100%', background: 'var(--accent-green)', opacity: 0.3 }}></div>}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       <style>{`
-        :fullscreen { 
+        .is-fullscreen { 
           background: #020617 !important; 
-          width: 100vw !important; 
-          height: 100vh !important;
-          display: flex !important;
-          flex-direction: column !important;
-          padding: 20px !important;
-          box-sizing: border-box !important;
+          width: 100% !important; 
+          height: 100% !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
         }
-        :fullscreen .video-view-wrapper {
-          height: auto !important;
+        .is-fullscreen .video-view-wrapper {
+          flex: 1 !important;
         }
         .fullscreen-btn-tactical:hover {
-          background: rgba(99, 102, 241, 0.2) !important;
-          border-color: var(--accent-primary) !important;
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3) !important;
-          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.1) !important;
+          border-color: rgba(255, 255, 255, 0.3) !important;
+          color: #fff !important;
         }
       `}</style>
     </div>

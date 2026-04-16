@@ -139,8 +139,13 @@ export default function App() {
         return <VideoLab />;
       case 'alerts':
         return (
-          <div style={{ maxWidth: 500, height: '100%' }}>
-            <AlertPanel alerts={alerts} onClear={clearAlerts} onRemove={removeAlert} />
+          <div style={{ maxWidth: 900, height: '100%', margin: '0 auto' }}>
+            <AlertPanel 
+              alerts={alerts} 
+              onClear={clearAlerts} 
+              onRemove={removeAlert} 
+              forceHistory={true}
+            />
           </div>
         );
       case 'events':

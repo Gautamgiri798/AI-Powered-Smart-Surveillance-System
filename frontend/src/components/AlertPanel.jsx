@@ -47,8 +47,15 @@ function getSeverityColor(severity) {
   }
 }
 
-export default function AlertPanel({ alerts = [], liveBehaviors = {}, onClear, onRemove, horizontal = false }) {
-  const [tab, setTab] = useState('live'); // 'live' or 'history'
+export default function AlertPanel({ 
+  alerts = [], 
+  liveBehaviors = {}, 
+  onClear, 
+  onRemove, 
+  horizontal = false,
+  forceHistory = false 
+}) {
+  const [tab, setTab] = useState(forceHistory ? 'history' : 'live');
 
   const handleClearAll = async () => {
     try {
@@ -128,46 +135,49 @@ export default function AlertPanel({ alerts = [], liveBehaviors = {}, onClear, o
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(15, 23, 42, 0.4)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(15, 23, 42, 0.4)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', height: '100%' }}>
       
       {/* Header with tabs */}
       <div style={{ padding: '20px 24px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <h3 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 10, letterSpacing: '0.05em', marginBottom: 16 }}>
           <div className="status-led led-active" style={{ width: 6, height: 6 }} />
-          LIVE DETECTION FEED
+          {forceHistory ? 'HISTORICAL MISSION ALERTS' : 'LIVE DETECTION FEED'}
         </h3>
-        <div style={{ display: 'flex', gap: 0 }}>
-          <button 
-            onClick={() => setTab('live')}
-            style={{ 
-              flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
-              background: tab === 'live' ? 'rgba(59,130,246,0.1)' : 'transparent',
-              color: tab === 'live' ? '#3b82f6' : 'rgba(255,255,255,0.35)',
-              fontSize: '0.6rem', fontWeight: 900, letterSpacing: '0.1em',
-              borderBottom: tab === 'live' ? '2px solid #3b82f6' : '2px solid transparent',
-              transition: 'all 0.2s'
-            }}
-          >
-            🔴 REAL-TIME ({liveFeed.length})
-          </button>
-          <button 
-            onClick={() => setTab('history')}
-            style={{ 
-              flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
-              background: tab === 'history' ? 'rgba(99,102,241,0.1)' : 'transparent',
-              color: tab === 'history' ? '#818cf8' : 'rgba(255,255,255,0.35)',
-              fontSize: '0.6rem', fontWeight: 900, letterSpacing: '0.1em',
-              borderBottom: tab === 'history' ? '2px solid #818cf8' : '2px solid transparent',
-              transition: 'all 0.2s'
-            }}
-          >
-            📋 ALERT LOG ({alerts.length})
-          </button>
-        </div>
+        
+        {!forceHistory && (
+          <div style={{ display: 'flex', gap: 0 }}>
+            <button 
+              onClick={() => setTab('live')}
+              style={{ 
+                flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
+                background: tab === 'live' ? 'rgba(59,130,246,0.1)' : 'transparent',
+                color: tab === 'live' ? '#3b82f6' : 'rgba(255,255,255,0.35)',
+                fontSize: '0.6rem', fontWeight: 900, letterSpacing: '0.1em',
+                borderBottom: tab === 'live' ? '2px solid #3b82f6' : '2px solid transparent',
+                transition: 'all 0.2s'
+              }}
+            >
+              🔴 REAL-TIME ({liveFeed.length})
+            </button>
+            <button 
+              onClick={() => setTab('history')}
+              style={{ 
+                flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
+                background: tab === 'history' ? 'rgba(99,102,241,0.1)' : 'transparent',
+                color: tab === 'history' ? '#818cf8' : 'rgba(255,255,255,0.35)',
+                fontSize: '0.6rem', fontWeight: 900, letterSpacing: '0.1em',
+                borderBottom: tab === 'history' ? '2px solid #818cf8' : '2px solid transparent',
+                transition: 'all 0.2s'
+              }}
+            >
+              📋 ALERT LOG ({alerts.length})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content area */}
-      <div style={{ overflowY: 'auto', maxHeight: '600px' }}>
+      <div style={{ overflowY: 'auto', flex: 1, maxHeight: forceHistory ? 'none' : '500px' }}>
         
         {/* ─── LIVE TAB ─── */}
         {tab === 'live' && (
@@ -330,6 +340,20 @@ export default function AlertPanel({ alerts = [], liveBehaviors = {}, onClear, o
                       </div>
                       <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{(confidence * 100).toFixed(0)}%</span>
                     </div>
+
+                    {/* Forensic Image Capture Preview */}
+                    {alert.frame_url && (
+                      <div style={{ marginTop: 12, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', cursor: 'zoom-in' }}>
+                        <img 
+                          src={`http://localhost:5000${alert.frame_url}`} 
+                          alt="Forensic Capture"
+                          style={{ width: '100%', height: 'auto', display: 'block', transition: 'transform 0.3s' }}
+                          onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                          onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                          onError={e => e.target.style.display = 'none'}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })

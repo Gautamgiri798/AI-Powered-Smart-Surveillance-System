@@ -100,14 +100,14 @@ class DeepSortTracker:
     Elite DeepSort Multi-Object Tracker.
     Uses appearance features (Re-ID) + Kalman Filter.
     """
-    def __init__(self, max_age=30):
+    def __init__(self, max_age=15):
         if DeepSort is None:
             print("[TRACKER] ⚠️ DeepSort library not found. Falling back to SimpleTracker.")
             self.internal = SimpleTracker(max_disappeared=max_age)
             self.is_deepsort = False
             self.positions = self.internal.positions  # Map simple tracker positions to parent structure
         else:
-            self.tracker = DeepSort(max_age=max_age, n_init=3, nms_max_overlap=1.0, max_cosine_distance=0.2)
+            self.tracker = DeepSort(max_age=max_age, n_init=3, nms_max_overlap=0.4, max_cosine_distance=0.2)
             self.is_deepsort = True
             # Shared memory for velocity/stationary logic
             self.positions = defaultdict(list)
@@ -125,35 +125,66 @@ class DeepSortTracker:
         tracks = self.tracker.update_tracks(raw_detections, frame=frame)
         
         tracked_detections = []
+        used_det_indices = set()
+        
         for track in tracks:
             if not track.is_confirmed(): continue
             track_id = int(track.track_id)
             ltrb = track.to_ltrb() # Left, Top, Right, Bottom
             center = [(ltrb[0] + ltrb[2]) / 2, (ltrb[1] + ltrb[3]) / 2]
-            
-            # Map back to original detection if possible to preserve keypoints/labels
+            # Map back to original detection if possible (Exclusive & Class-Aware matching)
             best_match = None
-            min_dist = 50
-            for d in detections:
+            best_idx = -1
+            min_dist = 60
+            track_class = int(track.get_det_class() or 0)
+
+            for i, d in enumerate(detections):
+                if i in used_det_indices: continue
+                # NEW: Matching must be same class to prevent 'track stealing'
+                if int(d["class"]) != track_class: continue
+
                 d_center = d["center"]
                 dist = math.sqrt((center[0]-d_center[0])**2 + (center[1]-d_center[1])**2)
                 if dist < min_dist:
                     min_dist = dist
                     best_match = d
+                    best_idx = i
             
-            final_det = best_match.copy() if best_match else {
-                "bbox": ltrb.tolist(), "confidence": 1.0, "class": int(track.get_det_class() or 0),
-                "label": f"id_{track_id}", "is_weapon": False, "keypoints": None
-            }
-            final_det["track_id"] = track_id
-            final_det["center"] = center
-            
-            # Update telemetry history
-            self.positions[track_id].append((center, time.time()))
-            if len(self.positions[track_id]) > 100: self.positions[track_id] = self.positions[track_id][-100:]
-            tracked_detections.append(final_det)
+            if best_match:
+                used_det_indices.add(best_idx)
+                final_det = best_match.copy()
+                final_det["track_id"] = track_id
+                final_det["center"] = center
+                
+                # Update telemetry history
+                self.positions[track_id].append((center, time.time()))
+                if len(self.positions[track_id]) > 100: self.positions[track_id] = self.positions[track_id][-100:]
+                tracked_detections.append(final_det)
+            else:
+                # INTERNAL UPDATE ONLY for ghost tracks (Kalman filter maintenance)
+                # We do NOT add to tracked_detections to prevent showing 'stuck' boxes on screen
+                self.positions[track_id].append((center, time.time()))
+                if len(self.positions[track_id]) > 100: self.positions[track_id] = self.positions[track_id][-100:]
+
+        # CRITICAL FIX: Include orphan detections that aren't being tracked yet
+        # This ensures objects appear immediately on screen without waiting for tracker confirmation
+        for i, d in enumerate(detections):
+            if i not in used_det_indices:
+                # Add a virtual track_id or leave it as None
+                orphan = d.copy()
+                # To distinguish from tracks, we don't set track_id or set it to -1
+                tracked_detections.append(orphan)
 
         return tracked_detections
+
+    def _compute_iou(self, boxA, boxB):
+        xA = max(boxA[0], boxB[0]); yA = max(boxA[1], boxB[1])
+        xB = min(boxA[2], boxB[2]); yB = min(boxA[3], boxB[3])
+        inter = max(0, xB - xA) * max(0, yB - yA)
+        if inter == 0: return 0.0
+        areaA = (boxA[2]-boxA[0])*(boxA[3]-boxA[1])
+        areaB = (boxB[2]-boxB[0])*(boxB[3]-boxB[1])
+        return inter / (areaA + areaB - inter)
 
     def get_velocity(self, track_id):
         if track_id not in self.positions or len(self.positions[track_id]) < 2: return 0.0

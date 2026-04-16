@@ -321,7 +321,19 @@ export default function EventLog() {
                       </div>
                     </td>
                     <td style={{ fontSize: '0.8rem', opacity: 0.8, color: 'var(--text-secondary)' }}>
-                      {event.description}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span>{event.description}</span>
+                        {event.frame_url && (
+                          <div style={{ width: 80, height: 45, borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                            <img 
+                              src={`http://localhost:5000${event.frame_url}`} 
+                              alt="Crop" 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              onClick={() => window.open(`http://localhost:5000${event.frame_url}`, '_blank')}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>

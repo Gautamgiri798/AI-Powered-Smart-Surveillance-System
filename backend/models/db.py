@@ -80,7 +80,7 @@ def init_db():
             ("admin", hash_password("admin123"), "admin", "System Administrator")
         )
         conn.commit()
-        print("[DB] 👤 Default admin user created (admin / admin123)")
+        print("[DB] [USER] Default admin user created (admin / admin123)")
 
     # ── Safe Seed primary cameras ──
     sample_cameras = [
@@ -92,9 +92,9 @@ def init_db():
         sample_cameras
     )
     conn.commit()
-    print("[DB] 📷 Mission registries synchronized.")
+    print("[DB] [CAM] Mission registries synchronized.")
 
-    print(f"[DB] ✅ SQLite3 database initialized — {Config.SQLITE_DB}")
+    print(f"[DB] [OK] SQLite3 database initialized — {Config.SQLITE_DB}")
 
 
 # ═══════════════════════════════════════════
