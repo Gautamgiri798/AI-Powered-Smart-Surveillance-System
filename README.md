@@ -22,22 +22,23 @@
 ## ⚡ Core Capabilities
 
 ### 1. 👁️ Tactical Object & Threat Detection
-
 - **Real-time Target Tracking:** Uses `yolov8s.pt` to autonomously classify and track entities.
 - **Weapon Recognition Matrices:** Explicit configurations to identify threats holding sharp or blunt objects (e.g., Knives, Baseball Bats, Scissors).
-- **Multi-Camera Indexing:** Seamlessly bind virtual camera streams (e.g., iOS via Iriun Webcam) or hardware RTSP nodes directly to the dashboard GUI.
+- **Noise Reduction & Signal Filtering:** Implemented intelligence matrices that apply higher confidence thresholds to commonly misidentified objects (e.g., bottles/remotes ghosting as "cell phones").
 
 ### 2. 🏃 Behavioral Intelligence Analysis
-
-- **Granular Posture Assessment:** Utilizes `yolov8s-pose.pt` keypoints to precisely deduce subject states (`STANDING`, `SITTING`, `WALKING`, `RUNNING`).
+- **Granular Posture Assessment:** Utilizes `yolov8s-pose.pt` keypoints to precisely deduce subject states (`STANDING`, `SITTING`, `WALKING`, `RUNNING`, `LYING DOWN`).
 - **Complex Object Interaction:** Evaluates intersecting bounding boxes to determine situational actions (e.g., _Subject Holding Object_, _Subject Using Phone_).
 - **Anomalous Behavioral Triggers:** Dynamic loitering detection and fallen-person indicators (`POSTURE ANOMALY / PERSON DOWN`).
 
 ### 3. 📡 Mission Control Interface (Vite/React)
-
 - **High-Fidelity Dashboard:** React-driven terminal UI utilizing a sleek tactical cyber-aesthetic with live WebSocket telemetry.
-- **Granular Forensic Event Logs:** Local SQLite 3 backing allowing you to permanently filter, acknowledge, or purge historical records.
-- **NLP Intelligence Briefings:** An intelligent text parser that converts raw bounding box data into human-readable situational logs (e.g., _"1 Subject detected near right border holding a phone"_).
+- **Forensic Evidence Vault:** The system now automatically captures and stores high-resolution forensic frames when a critical alert is triggered.
+- **Integrated Timeline & NLP Briefings:** Access forensic snapshots within the `ALERTS` panel alongside human-readable situational logs (e.g., _"Subject 04 detected loitering in Sector B holding a suspicious object"_).
+
+### 4. ⚙️ Engine Stability & Acceleration
+- **OpenVINO Hardware Optimization:** Refined the inference pipeline for 35% faster processing on standard multi-core CPUs.
+- **Robust Ingestion Protocols:** Hardened camera ingestion logic to prevent resource leaks and resolve connectivity issues from previous sessions (Zombie Process Resolution).
 
 ---
 
@@ -167,29 +168,4 @@ Navigate to `http://localhost:3000/` in your browser.
 - **Ports Blocked / Dashboard says System Offline:** Ensure there are no zombie Python background processes. Force quit Python `taskkill /F /IM python.exe` and reboot `app.py`.
 - **Zero Frame Emissions:** Verify no other application is seizing generic control over `/dev/video0` or `COM` port cameras causing `cv2.VideoCapture()` blackouts.
 
----
 
-### 1. Better evidence tracking with forensic captures
-
-- **Visual Evidence Vault:** The system now automatically captures and stores high-resolution forensic frames when a critical alert is triggered.
-- **Integrated Timeline View:** Access forensic snapshots directly within the `ALERTS` panel to verify incidents without scrubbing through raw video.
-
-### 2. Improved behavior and posture detection
-
-- **Expanded State Detection:** Beyond basic walking, the system now distinguishes between `SITTING`, `LYING DOWN` (Person-Down detection), `RUNNING`, and `LOITERING`.
-- **Interaction Logic:** Sophisticated bounding-box intersection logic to detect `USING PHONE` and `HOLDING OBJECT` with high precision.
-
-### 3. Reducing false alarms and background noise
-
-- **Class-Specific Sensitivity:** Implemented intelligence matrices that apply higher confidence thresholds to commonly misidentified objects (e.g., bottles/remotes ghosting as "cell phones").
-- **Strict NMS Per-Class:** Custom Non-Maximum Suppression logic ensures that a single person isn't double-counted across different inference passes.
-
-### 4. Live scene summaries and telemetry
-
-- **Scene Interpretation:** Real-time conversion of detection data into NLP-driven intelligence briefings (e.g., _"Subject 04 detected loitering in Sector B holding a suspicious object"_).
-- **Live Telemetry Cards:** Dedicated dashboard cards for real-time monitoring of active persons, threat levels, and system health status.
-
-### 5. Stability and performance fixes
-
-- **Zombie Process Resolution:** Hardened camera ingestion logic to prevent resource leaks and resolve connectivity issues from previous sessions.
-- **OpenVINO Optimization:** Refined the inference pipeline for 35% faster processing on standard multi-core CPUs.
