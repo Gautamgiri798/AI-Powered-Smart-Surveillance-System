@@ -19,7 +19,7 @@ export default function useSocket() {
     
     // Absolute strategic fallback for Windows environments
     const backendUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://127.0.0.1:5000'
+      ? 'http://127.0.0.1:5555'
       : window.location.origin;
 
     console.info(`[WS] Establishing Strategic Bridge on ${backendUrl}`);

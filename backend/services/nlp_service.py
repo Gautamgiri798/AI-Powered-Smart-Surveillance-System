@@ -21,7 +21,7 @@ class SceneUnderstandingService:
 
         person_count = sum(1 for d in detections if d["class"] == 0)
         threats = [d["label"].upper() for d in detections if d.get("is_weapon")]
-        critical_behaviors = [b for b in behaviors if b["severity"] == "critical"]
+        critical_behaviors = [b for b in behaviors if b.get("severity") == "critical"]
         
         # --- Contextual Summary Engineering ---
         summary_parts = []
@@ -83,8 +83,8 @@ class SceneUnderstandingService:
         score = person_count * 2
         if threats: score += 50
         for b in behaviors:
-            if b["severity"] == "critical": score += 30
-            elif b["severity"] == "high": score += 15
+            if b.get("severity") == "critical": score += 30
+            elif b.get("severity") == "high": score += 15
         return min(score, 100)
 
 # Global singleton

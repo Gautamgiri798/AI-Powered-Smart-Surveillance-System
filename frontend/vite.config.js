@@ -7,18 +7,18 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5555',
         changeOrigin: true,
         timeout: 600000, // 10 minutes for deep scan
         proxyTimeout: 600000,
       },
 
       '/socket.io': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5555',
         ws: true,
       },
       '/static': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5555',
         changeOrigin: true,
       },
 

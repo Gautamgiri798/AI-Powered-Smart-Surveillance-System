@@ -1,5 +1,6 @@
 """Video ingestion and streaming service (Hardened AI Worker Model)."""
 import cv2
+import numpy as np
 import sys
 import time
 import platform
@@ -14,6 +15,48 @@ from services.nlp_service import scene_engine
 from models.db import get_camera
 
 IS_WINDOWS = platform.system() == "Windows"
+
+class VirtualCapture:
+    """Simulated camera for development and demonstration."""
+    def __init__(self):
+        self.frame_count = 0
+        self.width = 640
+        self.height = 360
+        self.is_opened = True
+
+    def isOpened(self):
+        return self.is_opened
+
+    def read(self):
+        self.frame_count += 1
+        frame = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        # Background: dark blue gradient
+        for y in range(self.height):
+            frame[y, :, 0] = min(255, 20 + (y // 10))
+            frame[y, :, 1] = 10
+            frame[y, :, 2] = 40
+        
+        # Draw moving "Subject" (simulated person)
+        import math
+        px = int(320 + 200 * math.sin(self.frame_count * 0.05))
+        py = int(180 + 50 * math.cos(self.frame_count * 0.03))
+        # Draw a white rectangle for "Person"
+        cv2.rectangle(frame, (px-20, py-50), (px+20, py+50), (220, 220, 220), -1)
+        # Head
+        cv2.circle(frame, (px, py-60), 15, (220, 220, 220), -1)
+        
+        cv2.putText(frame, "STATUS: VIRTUAL_SIMULATION_ACTIVE", (30, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 150, 255), 2)
+        cv2.putText(frame, "NO HARDWARE DETECTED - FALLING BACK TO CORE SIM", (30, 60), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+        
+        return True, frame
+
+    def release(self):
+        self.is_opened = False
+
+    def set(self, propId, value):
+        pass
 
 class CameraStream:
     """Persistent AI Worker Architecture (Zero-Spawning overhead for maximum speed)."""
@@ -66,17 +109,22 @@ class CameraStream:
         return True
 
     def _open_camera(self, source, is_usb):
-        """Intelligent Multi-Backend Opener."""
+        """Intelligent Multi-Backend Opener with Virtual Fallback."""
         backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if IS_WINDOWS else [cv2.CAP_ANY]
         for backend in backends:
-            cap = cv2.VideoCapture(source, backend)
-            if cap.isOpened():
-                # Focus on 640x360 (16:9) directly from hardware if possible
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-                return cap
-        return None
+            try:
+                cap = cv2.VideoCapture(source, backend)
+                if cap.isOpened():
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+                    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                    return cap
+            except:
+                continue
+
+        # --- VIRTUAL FALLBACK (If Hardware Fails) ---
+        print(f"[MISSION {self.camera_id}] ⚠️ HARDWARE FAIL. ACTIVATING VIRTUAL SIMULATOR...")
+        return VirtualCapture()
 
     def stop(self):
         """Safe Hardware Release."""
@@ -93,7 +141,8 @@ class CameraStream:
             # 1. Physical Capture
             ret, frame = self.cap.read()
             if not ret or frame is None:
-                time.sleep(0.01)
+                print(f"[MISSION {self.camera_id}] ⚠️ WARN: Failed to capture frame.")
+                time.sleep(0.5)
                 continue
 
             fh, fw = frame.shape[:2]
@@ -170,31 +219,22 @@ class CameraStream:
                     b_type = b.get("type", "unknown")
                     severity = b.get("severity", "info")
                     
-                    # Security Logic: Broadcast specific behaviors, exclude raw updates and generic person counting to prevent spam
-                    # Threshold for saving events to the permanent situational log
-                    # Now allows all detections (Sitting, Walking, etc.) for full forensic history
                     if b_type == "status_update":
                         continue
                         
                     b_key = f"{self.camera_id}_{b_type}"
-                    # Individual Target Throttle: Prevent redundant alert spam for the same incident
                     if time.time() - self._last_alert_time.get(b_key, 0) > 5.0:
                         self._last_alert_time[b_key] = time.time()
                         
-                        # Forensic Capture Protocol: Save frame for high-severity events
                         frame_url = None
                         if severity in ["critical", "high"]:
                             from utils.frame_utils import save_alert_frame
                             frame_url = save_alert_frame(frame, self.camera_id)
 
-                        # Generate alert (includes transactional record-keeping and frame-linking)
                         alert_data = create_alert(self.camera_id, b, frame_url=frame_url)
-                        print(f"[DEBUG ALERT RESULT] {alert_data.get('_id')}")
-                        
                         print(f"[MISSION ALERT] {self.camera_id} // {b_type.upper()} // SEV: {severity.upper()}")
                         
                         with self._emit_lock:
-                            # Standardize broadcast to ensure delivery to dashboard
                             self.socketio.emit("alert", alert_data)
                 
                 self.ai_queue.task_done()
@@ -202,7 +242,9 @@ class CameraStream:
             except queue.Empty:
                 continue
             except Exception as e:
+                import traceback
                 print(f"[AI WORKER ERROR]: {e}")
+                traceback.print_exc()
                 time.sleep(0.5)
 
 # Global Manager

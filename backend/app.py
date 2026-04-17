@@ -136,5 +136,5 @@ if __name__ == "__main__":
     threading.Thread(target=get_model, daemon=True).start()
     
     # Run the server with Flask-SocketIO
-    print(f"\n[SYSTEM] Starting server on port 5000...")
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True, allow_unsafe_werkzeug=True)
+    print(f"\n[SYSTEM] Starting server on port 5555...")
+    socketio.run(app, host="0.0.0.0", port=5555, debug=True, allow_unsafe_werkzeug=True)
